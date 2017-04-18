@@ -1,0 +1,71 @@
+.myImg {
+    .modalMyImg {
+        position: fixed;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 1;
+        justify-content: flex-end;
+        align-items: center;
+        .myImgModalPanel {
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .img {
+                cursor: move;
+            }
+        }
+        .opts {
+            display: flex;
+            width: 400px;
+            height: 70px;
+            background-color: rgba(47, 63, 77, 0.9);
+            border-radius: 70px;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-direction: row;
+            margin-bottom: 30px;
+            z-index: 3;
+            .btns {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                margin: 10px;
+                color: #e9e9e9;
+                .btn {
+                    font-size: 20px;
+                }
+                .text {
+                    font-size: 12px;
+                }
+            }
+            .btns:hover {
+                color: white;
+            }
+        }
+        .closeBtn {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 40px;
+            cursor: pointer;
+        }
+        .closeBtn:hover {
+            color: red;
+        }
+    }
+}

@@ -1,0 +1,101 @@
+.OrgForm {
+    justify-content: flex-start;
+    flex-direction: column;
+    display: flex;
+    padding: 0px;
+    height: 100%;
+    flex: 1;
+    .navDiv {
+        display: flex;
+        padding: 5px 8px;
+        font-size: 14px;
+        flex-direction: row;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        width: 100%;
+        .listNav {
+            cursor: pointer;
+        }
+        .spSpan {
+            margin-right: 5px;
+            margin-left: 5px;
+            color: #7d7d7d;
+        }
+        .endNav {
+            color: gray;
+            cursor: default;
+        }
+    }
+    .online {
+        border-bottom: 1px solid gainsboro;
+        .bmrssp{
+            width: 45PX;
+            display: flex;
+            flex-direction: row-reverse;
+        }
+    }
+    .list {
+        flex-grow: 1;
+        width: 100%!important;
+        overflow-y: auto;
+        overflow-x: hidden;
+        .listOrg {
+            display: flex;
+            justify-content: space-between;
+            padding-right: 18px;
+        }
+        .listGroup {
+            display: flex;
+            justify-content: flex-start;
+        }
+        .nofrienddiv{
+            margin-left: 12px;
+        }
+        .nav-list {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            padding-left: 18px;
+            height: 52px;
+            color: black;
+            .select {
+                width: 40px;
+                height: 40px;
+                border-radius: 40px;
+                position: absolute;
+                top: 6px;
+                left: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: rgba(0, 0, 0, 0.5);
+                i {
+                    font-size: 16px;
+                    color: white;
+                }
+            }
+            .img {
+                border-radius: 40px;
+                border: 2px solid white;
+                margin: 4px;
+            }
+            .groupSpan {
+                display: flex;
+                flex-grow: 1;
+                justify-content: space-between;
+                padding-left: 3px;
+                padding-right: 18px;
+            }
+            .groupImg {
+                margin: 4px;
+            }
+            span {
+                font-size: 14px;
+            }
+        }
+        .nav-list:hover {
+            background-color: #DFEDFA;
+        }
+    }
+}
