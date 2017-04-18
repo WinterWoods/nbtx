@@ -1,3 +1,6 @@
 [submodule "SZORM"]
 	path = SZORM
 	url = https://github.com/longang520/SZORM.git
+[submodule "SZHelpers"]
+	path = SZHelpers
+	url = https://github.com/longang520/SZHelpers.git

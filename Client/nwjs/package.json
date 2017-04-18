@@ -1,0 +1,26 @@
+﻿{
+  "name": "内部通讯1",
+  "main": "app/index.html",
+  "description": "内部通讯桌面版",
+  "version": "1.0.0",
+  "nodejs": true,
+  "window": {
+    "min_width": 960,
+    "min_height": 602,
+    "width": 960,
+    "height": 602,
+    "icon": "logo.png",
+    "resizable": true,
+    "frame": false
+  },
+  "webkit": {
+    "plugin": false,
+    "page-cache": true
+  },
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "crypto": "0.0.3",
+    "process": "^0.11.9",
+    "regedit": "^2.2.6"
+  }
+}
