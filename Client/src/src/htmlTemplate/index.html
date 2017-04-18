@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <script src="http://localhost:10156/jquery" type="text/javascript"></script>
+    <script src="http://localhost:10156/jquery.signalR" type="text/javascript"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        window.config = {
+            ServiceUrl:"http://localhost:10156",
+            signalRUrl:"http://localhost:9999",
+            photoUrl:"http://localhost:9999",
+            picUrl:"http://localhost:9999",
+            Version:"1.0.1"
+        };
+        try {
+            window.fs = require('fs');
+            window.process = require('process');
+            window.regedit = require('regedit');
+            window.child_process = require('child_process');
+            window.http = require('http');
+            window.crypto1 = require('crypto');
+        }
+        catch (e) {
+            console.log("require", e);
+        } 
+        //阻止浏览器默认行。 
+        $(document).on({
+            dragleave: function (e) {    //拖离 
+                e.preventDefault();
+            },
+            drop: function (e) {  //拖后放 
+                e.preventDefault();
+            },
+            dragenter: function (e) {    //拖进 
+                e.preventDefault();
+            },
+            dragover: function (e) {    //拖来拖去 
+                e.preventDefault();
+            }
+        }); 
+    </script>
+    <div id="react-content"></div>
+</body>
+
+</html>

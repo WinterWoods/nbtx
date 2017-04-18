@@ -1,0 +1,110 @@
+.groupSetting {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  .contextPanel {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 10px;
+    font-size: 14px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: rgb(34, 34, 34);
+    .one {
+      display: flex;
+      padding: 10px;
+      flex-shrink: 0;
+      align-items: center;
+      .label {
+        margin-right: 10px;
+      }
+      .neirong {
+        flex: 1;
+        flex-direction: row;
+        display: flex;
+        .display, .edit {
+          display: flex;
+          button {
+            margin-left: 5px;
+          }
+        }
+        .text {
+          max-width: 145px;
+          margin-right: 5px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      .right {
+        justify-content: flex-end;
+      }
+    }
+    .lookMsgInfo {
+      padding: 10px;
+      color: rgb(177, 177, 177);
+    }
+    .groupPersonList {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      .onePerson {
+        margin: 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        .imgPanel {
+          width: 41px;
+          height: 41px;
+          position: relative;
+          .imga {
+            img {
+              width: 41px;
+              height: 41px;
+            }
+          }
+          .removeBtn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: none;
+            .removea {
+              color: red;
+            }
+          }
+        }
+        .imgPanel:hover {
+          .removeBtn {
+            display: block;
+          }
+        }
+        .name {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+  .btnOpts {
+    display: flex;
+    justify-content: space-between;
+    height: 65px;
+    flex-shrink: 0;
+    font-size: 14px;
+    align-items: center;
+    background-color: rgb(245, 249, 255);
+    .btnOpt {
+      display: flex;
+      flex: 1;
+    }
+    .exitGroup {
+      a {
+        color: red;
+      }
+      a:hover {
+        color: red;
+      }
+    }
+  }
+}

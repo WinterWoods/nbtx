@@ -1,0 +1,49 @@
+.fileContent {
+    display: flex;
+    color: black;
+    padding: 5px;
+    width: 100%;
+    .fileIco {
+        display: flex;
+        flex-direction: column;
+        img {
+            width: 65px;
+        }
+    }
+    .fileinfo {
+        display: flex;
+        flex: 1;
+        margin-left: 10px;
+        flex-direction: column;
+        justify-content: space-between;
+        .fileinfoName {
+            max-width: 135px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .progress {
+            display: flex;
+            a {
+                margin-left: 10px;
+            }
+        }
+        .fileinfOpts {
+            display: flex;
+            justify-content: space-between;
+        }
+        .otherstate {
+            display: flex;
+            justify-content: space-between;
+        }
+    }
+}
+
+.sendPicInfo {
+    .progress {
+        display: flex;
+        a {
+            margin-left: 10px;
+        }
+    }
+}
