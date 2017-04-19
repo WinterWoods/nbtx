@@ -3,4 +3,4 @@
 	url = https://github.com/longang520/SZORM.git
 [submodule "SZHelpers"]
 	path = SZHelpers
-	url = https://github.com/longang520/SZHelpers.git
+	url = https://github.com/WinterWoods/SZHelpers.git
