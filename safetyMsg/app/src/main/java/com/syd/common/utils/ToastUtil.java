@@ -1,16 +1,14 @@
-package com.syd.safetymsg;
+package com.syd.common.utils;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.widget.Toast;
 
 /**
- * Created by east on 2017/4/18.
+ * Created by east on 2017/4/19.
  */
 
-public class ToastUtils {
-    private ToastUtils() {
+public class ToastUtil {
+    private ToastUtil() {
             /* cannot be instantiated */
         throw new UnsupportedOperationException("cannot be instantiated");
     }

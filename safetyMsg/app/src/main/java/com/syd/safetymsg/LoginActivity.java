@@ -5,22 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
-import com.alibaba.fastjson.JSON;
+import com.syd.common.log.Log;
+import com.syd.common.utils.ToastUtil;
 import com.syd.okhttp.callback.Callback;
-import com.syd.okhttp.callback.StringCallback;
 import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
 
 import okhttp3.Call;
 import okhttp3.Request;
-import okhttp3.Response;
 
 public class LoginActivity extends  Activity implements View.OnClickListener {
     private String TAG = getClass().getName();
@@ -75,7 +71,7 @@ public class LoginActivity extends  Activity implements View.OnClickListener {
             }
             @Override
             public void onError(Call call, Exception e, int id) {
-                ToastUtils.showShort(context, e.getMessage());
+                ToastUtil.showShort(context, e.getMessage());
             }
 
             @Override

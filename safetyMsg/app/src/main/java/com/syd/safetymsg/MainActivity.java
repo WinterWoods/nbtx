@@ -1,6 +1,9 @@
 package com.syd.safetymsg;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -38,6 +41,22 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
     private int dark = 0xff000000;
     // 定义FragmentManager对象管理器
     private FragmentManager fragmentManager;
+    private SignalrService.MyBinder  myBinder;
+
+    private ServiceConnection connection = new ServiceConnection() {
+  
+        @Override  
+        public void onServiceDisconnected(ComponentName name) {
+
+        }  
+  
+        @Override  
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            myBinder = (SignalrService.MyBinder) service;
+            myBinder.startDownload();  
+        }  
+    };  
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,9 +64,10 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
         fragmentManager = getSupportFragmentManager();
         initView(); // 初始化界面控件
         setChioceItem(0); // 初始化页面加载时显示第一个选项卡
-        this.startService(new Intent(this, LocalCastielService.class));
-        this.startService(new Intent(this, RemoteCastielService.class));
-
+        Intent startIntent = new Intent(this, SignalrService.class);
+        startService(startIntent);
+//        Intent bindIntent = new Intent(this, SignalrService.class);
+//            bindService(bindIntent, connection, BIND_AUTO_CREATE);
     }
     /**
      * 初始化页面
