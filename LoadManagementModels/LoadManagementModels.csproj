@@ -78,6 +78,12 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SZHelpers\Helpers_4.5.csproj">
+      <Project>{82A22B70-5EDF-46D4-8579-60F49ADCF56A}</Project>
+      <Name>Helpers_4.5</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

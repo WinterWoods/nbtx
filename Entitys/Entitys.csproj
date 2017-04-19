@@ -82,6 +82,16 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SZHelpers\Helpers_4.5.csproj">
+      <Project>{82a22b70-5edf-46d4-8579-60f49adcf56a}</Project>
+      <Name>Helpers_4.5</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SZORM\SZORM_4.5.csproj">
+      <Project>{0aed9844-6935-4ff1-a52d-e3d6ca208de1}</Project>
+      <Name>SZORM_4.5</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

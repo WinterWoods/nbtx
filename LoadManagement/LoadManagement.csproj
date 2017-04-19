@@ -143,6 +143,14 @@
       <Project>{cddf2660-67ae-48f6-ad64-8726169063ae}</Project>
       <Name>LoadManagementModels</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SZHelpers\Helpers_4.5.csproj">
+      <Project>{82a22b70-5edf-46d4-8579-60f49adcf56a}</Project>
+      <Name>Helpers_4.5</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SZORM\SZORM_4.5.csproj">
+      <Project>{0aed9844-6935-4ff1-a52d-e3d6ca208de1}</Project>
+      <Name>SZORM_4.5</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="redis\EventLog.dll">
