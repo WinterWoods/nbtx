@@ -1,10 +1,16 @@
 package com.syd.safetymsg;
 
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -21,12 +27,24 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.google.gson.JsonElement;
+import com.syd.safetymsg.Models.HttpsApi.OftenList;
+import com.syd.safetymsg.Models.HttpsApi.UserInfo;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
+
+import microsoft.aspnet.signalr.client.Action;
+import microsoft.aspnet.signalr.client.SignalRFuture;
+
+import static android.content.Context.BIND_AUTO_CREATE;
 
 /**
  * Created by 78967 on 2017/2/15.
@@ -40,6 +58,19 @@ public class MessageFragment extends Fragment {
     private Handler handler;
 
     private  View lLoadingView;
+    private MainActivity mainActivity;
+    public MessageFragment(MainActivity activity){
+        mainActivity=activity;
+    }
+
+
+    @Override
+    public void onPause()
+    {
+        //getActivity().unbindService(conn);
+        super.onPause();
+    }
+
 
 
     AdapterView.OnItemClickListener mTitleListener = new AdapterView.OnItemClickListener() {
@@ -70,6 +101,9 @@ public class MessageFragment extends Fragment {
 
         //绑定加载中等组件
         lLoadingView=view.findViewById(R.id.layout_loading);
+
+
+
         handlerEvent();
         LoadData();
         return view;
@@ -96,29 +130,41 @@ public class MessageFragment extends Fragment {
         mListView.setVisibility(View.GONE);
         lLoadingView.setVisibility(View.VISIBLE);
         //开一条子线程加载网络数据
-
-        Runnable runnable = new Runnable() {
-            public void run() {
-                try {
-                    Thread.sleep(2000);
-                    //xmlwebData解析网络中xml中的数据
-                    //发送消息，并把persons结合对象传递过去
-                    mTitleDataList = getTitleDataList();
-                    Message msg = new Message();
-                    msg.what = 0;
-                    handler.sendMessage(msg);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        mainActivity.service.sendMsg(JsonElement[].class,"myOftenList", new SignalrService.sendCallback<JsonElement[]>() {
+            @Override
+            public void successed(JsonElement[] obj) {
+                for(Object tt:obj){
+                    OftenList often= JSON.parseObject(tt.toString(),OftenList.class);
+                    Log.i(TAG,often.getUserKey());
                 }
+                mListView.setVisibility(View.VISIBLE);
+                lLoadingView.setVisibility(View.GONE);
             }
-        };
-        try {
-            //开启线程
-            new Thread(runnable).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
+
+//        Runnable runnable = new Runnable() {
+//            public void run() {
+//                try {
+//                    Thread.sleep(2000);
+//                    //xmlwebData解析网络中xml中的数据
+//                    //发送消息，并把persons结合对象传递过去
+//                    mTitleDataList = getTitleDataList();
+//                    Message msg = new Message();
+//                    msg.what = 0;
+//                    handler.sendMessage(msg);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        };
+//        try {
+//            //开启线程
+//            new Thread(runnable).start();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
+
 
     public List<TitleData> getTitleDataList() {
         List<TitleData> listItem = new ArrayList<TitleData>();

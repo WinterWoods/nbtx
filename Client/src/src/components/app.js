@@ -156,6 +156,7 @@ export default class App extends Component {
                                 self.setState({ isLogin: true, LoginUser: resultLoginUser, selectedKey: window.defaultSelectedKey, NoReadMessageCount: 0 });
                                 //注册整体管理
                                 window.NewSelectKey = null;
+                                console.log("!!!!!!!!!");
                                 window.OftenListAdd = function (friendKey, type) {
                                     window.msgManager.myOftenListAdd({ FriendKey: friendKey, Type: type })
                                         .done(function (result) {

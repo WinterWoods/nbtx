@@ -23,10 +23,11 @@ namespace MessageManager
                 var ip = ConfigurationManager.AppSettings["redisIP"].ToString();
                 var redisProt = ConfigurationManager.AppSettings["redisProt"].ToString();
                 var redisPassword = ConfigurationManager.AppSettings["redisPassword"].ToString();
-
-                GlobalHost.DependencyResolver.UseRedis(ip, int.Parse(redisProt), redisPassword, "SydSignalRBus");
+                RedisScaleoutConfiguration redisScaleoutConfiguration = new RedisScaleoutConfiguration(ip, int.Parse(redisProt), redisPassword, "__redis_signalr");
+                redisScaleoutConfiguration.Database = 3;
+                GlobalHost.DependencyResolver.UseRedis(redisScaleoutConfiguration);
             }
-               
+
             var serializer = new JsonSerializer()
             {
                 DateFormatString = "yyyy-MM-dd HH:mm:ss",
@@ -41,10 +42,11 @@ namespace MessageManager
 
                 var hubConfiguration = new HubConfiguration
                 {
-                    EnableDetailedErrors = false,
-                    EnableJavaScriptProxies = true,
+                    EnableDetailedErrors = true,
+                    
                     EnableJSONP = true
                 };
+                //EnableJavaScriptProxies = true,
                 map.RunSignalR(hubConfiguration);
             });
             app.Run(context =>

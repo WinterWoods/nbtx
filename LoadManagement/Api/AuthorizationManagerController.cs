@@ -77,6 +77,7 @@ namespace LoadManagement.Api
                 {
                     throw new Exception("用户名或密码错误!");
                 }
+                db.Save();
                 return Login(user);
             }
         }

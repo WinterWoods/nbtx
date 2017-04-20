@@ -18,6 +18,16 @@ namespace MessageManager.SignalR
     public class UserManager : Hub
     {
         IHubContext context = GlobalHost.ConnectionManager.GetHubContext<MsgManager>();
+        public override Task OnConnected()
+        {
+            StartClass.log.WriteInfo("一个新用户连接了进来.");
+            return base.OnConnected();
+        }
+        public override Task OnDisconnected(bool stopCalled)
+        {
+            StartClass.log.WriteInfo("一个用户断开了.");
+            return base.OnDisconnected(stopCalled);
+        }
         /// <summary>
         /// 登陆系统
         /// </summary>

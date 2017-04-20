@@ -41,33 +41,36 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
     private int dark = 0xff000000;
     // 定义FragmentManager对象管理器
     private FragmentManager fragmentManager;
-    private SignalrService.MyBinder  myBinder;
 
-    private ServiceConnection connection = new ServiceConnection() {
-  
-        @Override  
+    public SignalrService service;
+    private MyServiceConn conn;
+
+    public class MyServiceConn implements ServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            service = ((SignalrService.MyBinder) binder).getService();
+            setChioceItem(0); // 初始化页面加载时显示第一个选项卡
+        }
+
+        @Override
         public void onServiceDisconnected(ComponentName name) {
+            // TODO Auto-generated method stub
+            service = null;
+        }
+    }
 
-        }  
-  
-        @Override  
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            myBinder = (SignalrService.MyBinder) service;
-            myBinder.startDownload();  
-        }  
-    };  
-    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        conn=new MyServiceConn();
+        bindService(new Intent(this, SignalrService.class), conn,
+                BIND_AUTO_CREATE);
         setContentView(R.layout.activity_main);
         fragmentManager = getSupportFragmentManager();
         initView(); // 初始化界面控件
-        setChioceItem(0); // 初始化页面加载时显示第一个选项卡
-        Intent startIntent = new Intent(this, SignalrService.class);
-        startService(startIntent);
-//        Intent bindIntent = new Intent(this, SignalrService.class);
-//            bindService(bindIntent, connection, BIND_AUTO_CREATE);
+
+
     }
     /**
      * 初始化页面
@@ -122,6 +125,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         clearChioce(); // 清空, 重置选项, 隐藏所有Fragment
         hideFragments(fragmentTransaction);
+
         switch (index) {
             case 0:
 // firstImage.setImageResource(R.drawable.XXXX); 需要的话自行修改
@@ -130,7 +134,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                 titleTv.setText("聊天记录");
 // 如果fg1为空，则创建一个并添加到界面上
                 if (messageFragment == null) {
-                    messageFragment = new MessageFragment();
+                    messageFragment = new MessageFragment(this);
                     fragmentTransaction.add(R.id.content, messageFragment);
                 } else {
 // 如果不为空，则直接将它显示出来
