@@ -1,4 +1,5 @@
 ﻿using Entitys;
+using LoadManagementModels;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using System;
@@ -22,13 +23,22 @@ namespace MessageManager
         /// </summary>
         /// <param name="Context"></param>
         /// <param name="userKey"></param>
-        public static void SignIn(this HubCallerContext Context, string userKey)
+        public static void SignIn(this HubCallerContext Context, string userKey, AuthServiceModel model)
         {
             using (DB db = new DB())
             {
-                var model = db.UserInfo.Find(userKey);
-                model.HubId = Context.ConnectionId;
-                db.UserInfo.Edit(model);
+                var user = db.UserInfo.Find(userKey);
+                if (model.Type == "1")
+                {
+                    user.HubId = Context.ConnectionId;
+                    db.UserInfo.Edit(user);
+
+                }
+                else
+                {
+                    user.PhoneHubId = Context.ConnectionId;
+                    db.UserInfo.Edit(user);
+                }
                 db.Save();
             }
         }
@@ -47,7 +57,13 @@ namespace MessageManager
                     db.UserInfo.Edit(model);
                     db.Save();
                 }
-
+                var model1 = db.UserInfo.Where(w => w.PhoneHubId == Context.ConnectionId).ToEntity();
+                if (model1 != null)
+                {
+                    model1.PhoneHubId = "";
+                    db.UserInfo.Edit(model1);
+                    db.Save();
+                }
             }
         }
         /// <summary>
@@ -59,7 +75,7 @@ namespace MessageManager
         {
             using (DB db = new DB())
             {
-                return db.UserInfo.Where(w => w.HubId == Context.ConnectionId).ToEntity();
+                return db.UserInfo.Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).ToEntity();
             }
         }
         /// <summary>
@@ -71,7 +87,7 @@ namespace MessageManager
         {
             using (DB db = new DB())
             {
-                var user = db.UserInfo.Where(w => w.HubId == Context.ConnectionId).ToEntity();
+                var user = db.UserInfo.Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).ToEntity();
                 if (user == null)
                 {
                     return false;
@@ -81,7 +97,6 @@ namespace MessageManager
                     return true;
                 }
             }
-
         }
     }
 }

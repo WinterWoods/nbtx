@@ -86,10 +86,6 @@ try {
                 "settingConfigGet",
                 "editPassword",
                 "settingConfigSet"
-            ],
-            funName: [
-                "exceptionHandler",
-                "reLogin"
             ]
         },
         {
@@ -114,11 +110,6 @@ try {
                 "removeFriend",
                 "delteGroupUser"
 
-            ],
-            funName: [
-                "exceptionHandler",
-                "reloadGroupInfo", //重新加载group信息
-                "deleteGroupSend"
             ]
         },
         {
@@ -128,13 +119,12 @@ try {
                 "getPhotoService",
                 "getDownServiceForMsgKey",
                 "getUpFileService"
-            ],
-            funName: [
-                "exceptionHandler"
             ]
         }
     ];
+    var hubClientList = ["deleteGroupSend", "reloadGroupInfo", "reLogin", "sendMsg", "receiveMsg", "msgReadedList"];
     window.GetMessageService = function (data) {
+        data.Type="1";
         var url = window.config.ServiceUrl + "/api/AuthorizationManager/LoginService";
         return $.ajax({
             url: url,
@@ -159,7 +149,7 @@ try {
         var url = window.config.ServiceUrl + "/api/AuthorizationManager/TestConnService";
         return $.ajax({
             url: url,
-            data: {},
+            data: {Typ:"1"},
             dataType: "json",
             type: "post",
             contentType: "application/json",
@@ -193,25 +183,22 @@ try {
                         return window[v.name].invoke(values, ...arguments);
                     };
                 });
-                //注册回调本地事件
-                console.log("装载监听事件");
-                $.each(v.funName, function (ii, values) {
-                    window["_" + v.name].on(values, function () {
-                        console.log(v.name + "------" + values + ":", arguments);
-                        if (window["_" + v.name][values]) {
-                            window["_" + v.name][values](...arguments);
-                        }
-                        else {
-                            console.log(v.name + "没有注册" + values + "事件");
-                        }
-                    });
-                });
-
             });
-            window._userManager.exceptionHandler = errShow;
-            window._fileManager.exceptionHandler = errShow;
-            window._orgManager.exceptionHandler = errShow;
-            window._msgManager.exceptionHandler = errShow;
+            //注册回调本地事件
+            console.log("装载监听事件");
+            window.clientHub=window.messageServiceConn.createHubProxy("clientManager");
+            $.each(hubClientList, function (i, value) {
+                window.clientHub.on(value, function () {
+                    console.log(value + ":", arguments);
+                    if (window.clientHub[value]) {
+                        window.clientHub[value](...arguments);
+                    }
+                    else {
+                        console.log("没有注册" + value + "事件");
+                    }
+                });
+            });
+            window.clientHub.exceptionHandler=errShow;
             console.log(window.messageServiceConn);
             window.messageServiceConn.stateChanged(function (change) {
                 console.log("object");

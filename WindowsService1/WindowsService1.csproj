@@ -92,12 +92,6 @@
       <DependentUpon>Service1.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Entitys\Entitys.csproj">
-      <Project>{a40fd60d-3574-4dfe-8187-797a9cba0c9d}</Project>
-      <Name>Entitys</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

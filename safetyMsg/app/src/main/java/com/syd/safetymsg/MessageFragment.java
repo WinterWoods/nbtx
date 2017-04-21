@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,6 +30,8 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.JsonElement;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.syd.safetymsg.Models.HttpsApi.OftenList;
 import com.syd.safetymsg.Models.HttpsApi.UserInfo;
 
@@ -54,7 +57,7 @@ public class MessageFragment extends Fragment {
     private String TAG = getClass().getName();
     private ListView mListView;
     private MessageListViewAdapter mTitleAdapter;
-    private List<TitleData> mTitleDataList;
+    private List<OftenList> mOftenList;
     private Handler handler;
 
     private  View lLoadingView;
@@ -63,28 +66,17 @@ public class MessageFragment extends Fragment {
         mainActivity=activity;
     }
 
-
-    @Override
-    public void onPause()
-    {
-        //getActivity().unbindService(conn);
-        super.onPause();
-    }
-
-
-
     AdapterView.OnItemClickListener mTitleListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             String title = null;
-            TitleData titleData = (TitleData) mTitleAdapter.getItem(position);
+            OftenList titleData = (OftenList) mTitleAdapter.getItem(position);
             if (titleData != null) {
-                title = titleData.getmTitle();
+                title = titleData.getFriendName();
                 if (title != null) {
                     Log.i(TAG,title);
                     Intent intent=new Intent(((MainActivity) getActivity()), MessageSendActivity.class);
                     startActivity(intent);
-                    //((MainActivity) getActivity()).viewDetail(title);
                 }
             }
         }
@@ -93,17 +85,13 @@ public class MessageFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.message_fg, container, false);
-        mTitleDataList=new ArrayList<TitleData>();
+        mOftenList=new ArrayList<OftenList>();
         mListView = (ListView) view.findViewById(R.id.listView);
         mTitleAdapter = new MessageListViewAdapter();
         mListView.setAdapter(mTitleAdapter);
         mListView.setOnItemClickListener(mTitleListener);
-
         //绑定加载中等组件
         lLoadingView=view.findViewById(R.id.layout_loading);
-
-
-
         handlerEvent();
         LoadData();
         return view;
@@ -118,6 +106,7 @@ public class MessageFragment extends Fragment {
                     //@SuppressWarnings("unchecked")
                     //List<TitleData> person = (List<TitleData>) msg.obj;
                     //给ListView绑定数据
+
                     mListView.setVisibility(View.VISIBLE);
                     lLoadingView.setVisibility(View.GONE);
                     mTitleAdapter.notifyDataSetChanged();
@@ -130,79 +119,31 @@ public class MessageFragment extends Fragment {
         mListView.setVisibility(View.GONE);
         lLoadingView.setVisibility(View.VISIBLE);
         //开一条子线程加载网络数据
-        mainActivity.service.sendMsg(JsonElement[].class,"myOftenList", new SignalrService.sendCallback<JsonElement[]>() {
+        mainActivity.service.sendMsg(OftenList[].class,"myOftenList", new SignalrService.sendCallback<OftenList[]>() {
             @Override
-            public void successed(JsonElement[] obj) {
-                for(Object tt:obj){
-                    OftenList often= JSON.parseObject(tt.toString(),OftenList.class);
+            public void successed(OftenList[] obj) {
+                for(OftenList often:obj){
                     Log.i(TAG,often.getUserKey());
+                    mOftenList.add(often);
                 }
-                mListView.setVisibility(View.VISIBLE);
-                lLoadingView.setVisibility(View.GONE);
+                Message msg = new Message();
+                msg.what = 0;
+                msg.obj = mOftenList;
+                handler.sendMessage(msg);
             }
         });
-
-//        Runnable runnable = new Runnable() {
-//            public void run() {
-//                try {
-//                    Thread.sleep(2000);
-//                    //xmlwebData解析网络中xml中的数据
-//                    //发送消息，并把persons结合对象传递过去
-//                    mTitleDataList = getTitleDataList();
-//                    Message msg = new Message();
-//                    msg.what = 0;
-//                    handler.sendMessage(msg);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        };
-//        try {
-//            //开启线程
-//            new Thread(runnable).start();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-    }
-
-
-    public List<TitleData> getTitleDataList() {
-        List<TitleData> listItem = new ArrayList<TitleData>();
-        for (int i = 0; i < 3000; i++) {
-            TitleData data = new TitleData("title" + i, getActivity().getResources().getDrawable(R.drawable.abc_btn_check_material));
-            listItem.add(data);
-        }
-        return listItem;
-    }
-
-    class TitleData {
-        private String mTitle;
-        private Drawable mIcon;
-
-        public TitleData(String title, Drawable icon) {
-            this.mTitle = title;
-            this.mIcon = icon;
-        }
-
-        public String getmTitle() {
-            return mTitle;
-        }
-
-        public Drawable getmIcon() {
-            return mIcon;
-        }
     }
 
     class MessageListViewAdapter extends BaseAdapter {
 
         @Override
         public int getCount() {
-            return mTitleDataList.size();
+            return mOftenList.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mTitleDataList.get(position);
+            return mOftenList.get(position);
         }
 
         @Override
@@ -221,17 +162,21 @@ public class MessageFragment extends Fragment {
                 viewHolder.mTitleImageView = (ImageView) view.findViewById(R.id.titleImageView);
                 viewHolder.mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
                 viewHolder.mMessageTextView = (TextView) view.findViewById(R.id.messageTextView);
-                viewHolder.mTimeTextView=(TextView)view.findViewById(R.id.timeTextView);
+                viewHolder.mTimeTextView = (TextView) view.findViewById(R.id.timeTextView);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            final TitleData titleData = (TitleData) getItem(position);
-            viewHolder.mTitleTextView.setText(titleData.getmTitle());
-            viewHolder.mTitleImageView.setBackgroundResource( R.drawable.default_head);
-            viewHolder.mMessageTextView.setText("测试测试测试侧试测试侧试测试侧试测试侧试测试侧试测试侧试测试侧嗯是");
-            viewHolder.mTimeTextView.setText("09:90");
+            final OftenList data = (OftenList) getItem(position);
+            viewHolder.mTitleTextView.setText(data.getFriendName());
+
+            ImageLoader.getInstance().displayImage(CommHttp.getHeadPic(data.getFriendKey(), data.getType()), viewHolder.mTitleImageView);
+            viewHolder.mMessageTextView.setText(data.getLastMsgContext());
+            if (data.getLastTime() != null)
+                viewHolder.mTimeTextView.setText(Utils.dateFormat(data.getLastTime()));
+            else
+                viewHolder.mTimeTextView.setText(Utils.dateFormat(data.getEditTime()));
             return view;
         }
 

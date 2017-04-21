@@ -17,6 +17,7 @@ namespace MessageManager.SignalR
     /// </summary>
     public class ServiceMessage:Hub
     {
+        IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ClientManager>();
         public Task<List<string>> GetGroupUserTop4(string groupKey)
         {
             return Task.Factory.StartNew(() =>
@@ -46,7 +47,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var user = db.UserInfo.Where(w => w.HubId == hubId).ToEntity();
+                    var user = db.UserInfo.Where(w => w.HubId == hubId||w.PhoneHubId==hubId).ToEntity();
                     if (user == null)
                         return false;
                     else return true;

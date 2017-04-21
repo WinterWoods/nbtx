@@ -13,6 +13,7 @@ import android.view.View;
 
 import com.google.gson.JsonElement;
 import com.syd.common.log.Log;
+import com.syd.safetymsg.Models.HttpsApi.FileAuthServiceModel;
 import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
 import com.syd.safetymsg.Models.HttpsApi.UserInfo;
 
@@ -38,19 +39,18 @@ import microsoft.aspnet.signalr.client.transport.LongPollingTransport;
 public class SignalrService extends Service {
     private String TAG = getClass().getName();
     public static LoginAuthUserOKModel model;
+    public static FileAuthServiceModel headPhotoModel;
     private MyBinder mBinder = new MyBinder();
     private HubConnection mHubConnection;
-
+    Handler handler;
     public HubProxy getmHubProxy_msgManager() {
         return mHubProxy_msgManager;
     }
 
     private HubProxy mHubProxy_userManager;
     private HubProxy mHubProxy_msgManager;
-
-    public Callback getCallback() {
-        return callback;
-    }
+    private HubProxy mHubProxy_fileManager;
+    private HubProxy mHubProxy_clientCallback;
 
     public void setCallback(Callback callback) {
         this.callback = callback;
@@ -95,12 +95,6 @@ public class SignalrService extends Service {
         return mBinder;
     }
 
-    public void setCallback(MainActivity mainActivity) {
-
-    }
-
-
-
     class MyBinder extends Binder {
 
         public SignalrService getService() {
@@ -138,14 +132,15 @@ public class SignalrService extends Service {
     public void initHubProxy(){
         // 开始执行后台任务
         mHubProxy_msgManager=mHubConnection.createHubProxy("msgManager");
-        mHubProxy_msgManager.subscribe("exceptionHandler").addReceivedHandler(new Action<JsonElement[]>() {
+        mHubProxy_userManager=mHubConnection.createHubProxy("userManager");
+        mHubProxy_fileManager=mHubConnection.createHubProxy("fileManager");
+        mHubProxy_clientCallback=mHubConnection.createHubProxy("clientManager");
+        mHubProxy_clientCallback.subscribe("sendMsg").addReceivedHandler(new Action<JsonElement[]>() {
             @Override
-            public void run(JsonElement[] jsonElements) throws Exception {
-
+            public void run(JsonElement[] obj) throws Exception {
+                Log.i(TAG,obj[0].toString());
             }
         });
-
-        mHubProxy_userManager=mHubConnection.createHubProxy("userManager");
     }
     private void initConnect() {
         Log.i(TAG,"!!!!!!!!!!!!!!");
@@ -187,16 +182,7 @@ public class SignalrService extends Service {
         return mHubProxy_msgManager.invoke(resultClass, method, args).done(new Action<E>() {
             @Override
             public void run(final E e) throws Exception {
-                Handler handler = new Handler() {
-                    public void handleMessage(Message msg) {
-                        E obj = (E) msg.obj;
-                        callback.successed(obj);
-                    }
-                };
-                Message msg = new Message();
-                msg.what = 0;
-                msg.obj = e;
-                handler.sendMessage(msg);
+                callback.successed(e);
             }
         });
     }
@@ -207,10 +193,17 @@ public class SignalrService extends Service {
                 Log.i(TAG,"连接成功");
                 mHubProxy_userManager.invoke(UserInfo.class,"signIn",model).done(new Action<UserInfo>() {
                     @Override
-                    public void run(UserInfo userInfo) throws Exception {
-                        Log.i(TAG, "返回值:"+userInfo.getHubId());
-                        if(callback!=null)
-                            callback.successed(userInfo);
+                    public void run(final UserInfo userInfo) throws Exception {
+
+                        mHubProxy_fileManager.invoke(FileAuthServiceModel.class,"getPhotoService").done(new Action<FileAuthServiceModel>() {
+                            @Override
+                            public void run(FileAuthServiceModel fileAuthServiceModel) throws Exception {
+                                headPhotoModel=fileAuthServiceModel;
+                                Log.i(TAG, "返回值:"+userInfo.getHubId()+"端口:"+fileAuthServiceModel.getServicePort());
+                                if(callback!=null)
+                                    callback.successed(userInfo);
+                            }
+                        });
                     }
                 });
             }

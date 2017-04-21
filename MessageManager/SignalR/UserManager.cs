@@ -17,7 +17,7 @@ namespace MessageManager.SignalR
     [LoginAuthorize]
     public class UserManager : Hub
     {
-        IHubContext context = GlobalHost.ConnectionManager.GetHubContext<MsgManager>();
+        IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ClientManager>();
         public override Task OnConnected()
         {
             StartClass.log.WriteInfo("一个新用户连接了进来.");
@@ -57,7 +57,7 @@ namespace MessageManager.SignalR
                     {
                         throw new Exception("没有查询到该用户");
                     }
-                    Context.SignIn(user.Key);
+                    Context.SignIn(user.Key, authUser);
                     
                     return user;
                 }

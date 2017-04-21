@@ -14,7 +14,7 @@ namespace MessageManager.SignalR
     [LoginAuthorize]
     public class OrgManager : Hub
     {
-
+        IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ClientManager>();
         public Task<OrgManagerResult> MyOrgList(OrgFriendSearch model)
         {
             return Task.Factory.StartNew(() =>
@@ -361,9 +361,16 @@ namespace MessageManager.SignalR
                     upGroupInfo.ForEach(f =>
                     {
                         var user = db.UserInfo.Find(f.UserKey);
-                        if (user != null && !string.IsNullOrEmpty(user.HubId))
+                        if (user != null)
                         {
-                            Clients.Client(user.HubId).reloadGroupInfo(info);
+                            if (!string.IsNullOrEmpty(user.HubId))
+                            {
+                                context.Clients.Client(user.HubId).reloadGroupInfo(info);
+                            }
+                            if (!string.IsNullOrEmpty(user.PhoneHubId))
+                            {
+                                context.Clients.Client(user.PhoneHubId).reloadGroupInfo(info);
+                            }
                         }
 
                     });
@@ -541,10 +548,18 @@ namespace MessageManager.SignalR
 
                     //查询这个用户
                     var user = db.UserInfo.Find(model.UserKey);
-                    if (user != null && !string.IsNullOrEmpty(user.HubId))
+                    if (user != null)
                     {
-                        //告诉他已经被移除群
-                        Clients.Client(user.HubId).DeleteGroupSend(group);
+                        if (!string.IsNullOrEmpty(user.HubId))
+                        {
+                            //告诉他已经被移除群
+                            context.Clients.Client(user.HubId).DeleteGroupSend(group);
+                        }
+                        if (!string.IsNullOrEmpty(user.PhoneHubId))
+                        {
+                            //告诉他已经被移除群
+                            context.Clients.Client(user.PhoneHubId).DeleteGroupSend(group);
+                        }
                     }
                     var delUser = db.GroupUser.Where(w => w.GroupKey == group.Key && w.UserKey == model.UserKey).ToEntity();
                     if (delUser != null)
@@ -618,10 +633,18 @@ namespace MessageManager.SignalR
                     //
                     userList.ForEach(f => {
                         var user = db.UserInfo.Find(f.UserKey);
-                        if (user != null && !string.IsNullOrEmpty(user.HubId))
+                        if (user != null)
                         {
-                            //告诉他已经被移除群
-                            Clients.Client(user.HubId).DeleteGroupSend(group);
+                            if (!string.IsNullOrEmpty(user.HubId))
+                            {
+                                //告诉他已经被移除群
+                                context.Clients.Client(user.HubId).DeleteGroupSend(group);
+                            }
+                            if (!string.IsNullOrEmpty(user.PhoneHubId))
+                            {
+                                //告诉他已经被移除群
+                                context.Clients.Client(user.PhoneHubId).DeleteGroupSend(group);
+                            }
                         }
                         db.GroupUser.Remove(f);
                     });

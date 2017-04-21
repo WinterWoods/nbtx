@@ -73,11 +73,24 @@ public class OftenList {
         IsRemove = isRemove;
     }
 
-    public String FriendName;
-    public String FriendKey;
-    public Date LastTime;
-    public String LastMsgContext;
-    public int MessageCount;
-    public String Type;
-    public String IsRemove;
+
+
+
+    private String FriendName;
+    private String FriendKey;
+    private Date LastTime;
+    private String LastMsgContext;
+    private int MessageCount;
+    private String Type;
+    private String IsRemove;
+
+    public Date getEditTime() {
+        return EditTime;
+    }
+
+    public void setEditTime(Date editTime) {
+        EditTime = editTime;
+    }
+
+    private Date EditTime;
 }

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Modal, Button} from 'antd';
 
+import "./headImg.less";
 
 export default class HeadImg extends Component {
     constructor(props) {
@@ -10,7 +11,7 @@ export default class HeadImg extends Component {
         }
     }
     render() {
-        return (<img className={this.props.className} src={window.headPic(this.props.userKey,this.props.type)} />);
+        return (<img className={"headimg"} src={window.headPic(this.props.userKey,this.props.type)} />);
     }
 }
 HeadImg.propTypes = {};

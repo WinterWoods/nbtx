@@ -16,4 +16,10 @@ public class CommHttp {
     {
         return OkHttpUtils.post().url(BaseUrl+url);
     }
+    public  static String getHeadPic(String userKey){
+        return getHeadPic(userKey,"1");
+    }
+    public  static String getHeadPic(String userKey,String type){
+        return "http://" + SignalrService.headPhotoModel.getServiceIP() + ":" + SignalrService.headPhotoModel.getServicePort() + "/api/FileManager/GetHeadPic?invitation=nbtx&serviceKey=" + SignalrService.headPhotoModel.getMessageServiceKey() + "&ticket=" + SignalrService.headPhotoModel.getQueryKey() + "&type=" + type + "&userKey=" + userKey;
+    }
 }

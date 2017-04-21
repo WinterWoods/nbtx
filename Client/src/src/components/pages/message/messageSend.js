@@ -61,7 +61,7 @@ export default class MessageSend extends Component {
         this.reloadMsg(this.props.oftenInfo);
 
         this.reloadGroupInfo(this.props.oftenInfo);
-        window._msgManager.msgReadedList = function (result) {
+        window.clientHub.msgReadedList = function (result) {
             if (result.Type == "1") {
                 //如果是个人聊天
                 self.state.arrIsReadSendList[result.Key] = true;
@@ -73,7 +73,7 @@ export default class MessageSend extends Component {
 
             self.setState({ arrIsReadSendList: self.state.arrIsReadSendList });
         };
-        window._orgManager.reloadGroupInfo = function (result) {
+        window.clientHub.reloadGroupInfo = function (result) {
             //如果有人修改自己有的群组信息会推送过来。
             //如果本地显示的 群聊等于这个则修改
 

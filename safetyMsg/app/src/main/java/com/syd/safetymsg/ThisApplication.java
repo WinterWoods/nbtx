@@ -5,6 +5,9 @@ import android.app.Service;
 import android.os.Vibrator;
 import android.util.Log;
 import com.litesuits.orm.LiteOrm;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.syd.okhttp.OkHttpUtils;
 
 import okhttp3.OkHttpClient;
@@ -31,5 +34,13 @@ public class ThisApplication extends Application {
                 .build();
         OkHttpUtils.initClient(okHttpClient);
 
+        DisplayImageOptions options = new DisplayImageOptions.Builder()
+                .cacheInMemory(true)
+                .cacheOnDisk(true)
+                .build();
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+                .defaultDisplayImageOptions(options)
+                .build();
+        ImageLoader.getInstance().init(config);
     }
 }

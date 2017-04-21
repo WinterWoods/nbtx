@@ -25,11 +25,12 @@ namespace LoadManagement.Api
             }
             using (DB db = new DB())
             {
-                var userDevice = db.UserDeviceList.Where(w => w.User_Token == model.Token && w.User_Device == model.Device).ToEntity();
+                DateTime now7 = DateTime.Now.AddDays(-7);
+                var userDevice = db.UserDeviceList.Where(w => w.UserToken == model.Token && w.UserDevice == model.Device&&w.LastLoginTime> now7).ToEntity();
                 if (userDevice == null)
-                    return null;
+                    return result;
                 var user = db.UserInfo.Find(userDevice.User_Key);
-                return Login(user);
+                return Login(user,model.Device,model.Type);
             }
         }
         IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ServiceManager>();
@@ -78,10 +79,10 @@ namespace LoadManagement.Api
                     throw new Exception("用户名或密码错误!");
                 }
                 db.Save();
-                return Login(user);
+                return Login(user,model.Device,model.Type);
             }
         }
-        private LoginAuthOKUserModel Login(UserInfo user)
+        private LoginAuthOKUserModel Login(UserInfo user,string deviceId,string loginType)
         {
             using (DB db = new DB())
             {
@@ -107,6 +108,7 @@ namespace LoadManagement.Api
                 authModel.Key = user.Key;
                 authModel.GuidAuth = Guid.NewGuid().ToString();
                 authModel.LoginTime = DateTime.Now;
+                authModel.Type = loginType;
 
                 result.Key = user.Key;
                 result.ConnServiceIP = ser.IP;
@@ -115,6 +117,23 @@ namespace LoadManagement.Api
 
                 context.Clients.Client(ser.ConnHubId).authUserModel(authModel);
 
+
+                var oldUserDevice= db.UserDeviceList.Where(w => w.User_Key == user.Key && w.UserDevice == deviceId).ToEntity();
+                if (oldUserDevice != null)
+                {
+                    oldUserDevice.UserToken = authModel.GuidAuth;
+                    oldUserDevice.LastLoginTime = DateTime.Now;
+                    db.UserDeviceList.Edit(oldUserDevice);
+                }
+                else
+                {
+                    UserDeviceList device = new UserDeviceList();
+                    device.User_Key = user.Key;
+                    device.LastLoginTime = DateTime.Now;
+                    device.UserToken = authModel.GuidAuth;
+                    device.UserDevice = deviceId;
+                    db.UserDeviceList.Add(device);
+                }
                 user = db.UserInfo.Edit(user);
                 db.Save();
                 return result;

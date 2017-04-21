@@ -135,6 +135,7 @@
     <Compile Include="Models\OrgFriendModel.cs" />
     <Compile Include="Models\SearchModel.cs" />
     <Compile Include="Models\UserModels.cs" />
+    <Compile Include="SignalR\ClientManager.cs" />
     <Compile Include="SignalR\FileManager.cs" />
     <Compile Include="SignalR\MsgManager.cs" />
     <Compile Include="SignalR\OrgManager.cs" />

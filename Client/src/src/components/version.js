@@ -66,6 +66,9 @@ export default class Version extends Component {
                         self.setState({ appVersionExe: downFile });
                     }, 1000)
                 }
+                else{
+                    self.setState({ isHavNewVersion: false });
+                }
             });
     }
     versionDownProgress() {

@@ -60,10 +60,9 @@ export default class App extends Component {
             window.hashHistoryNow = location.hash || window.defaultSelectedKey;
 
             if (window.msgManager) {
-                console.log("切换页面，准备注册sendMsg1,window._msg.sendMsg");
                 if (location.pathname != "/messageView") {
-                    window._msgManager.sendMsg = this.sendMessage;
-                    window._msgManager.receiveMsg = this.receiveMsg;
+                    window.clientHub.sendMsg = this.sendMessage;
+                    window.clientHub.receiveMsg = this.receiveMsg;
                 }
             }
         }.bind(this));
@@ -143,20 +142,20 @@ export default class App extends Component {
 
                         //在这里注册不知道还有问题没有
 
-                        console.log(window.msgManager);
-                        window._userManager.reLogin = function () {
+                        console.log("注册需要本地事件:",window.clientHub);
+                        window.clientHub.reLogin = function () {
                             self.setState({ isLogin: false });
                         };
                         //拉去最近消息列表
                         window.msgManager.myOftenList()
                             .done(function (result) {
                                 window.oftens = result;
-                                window._msgManager.sendMsg = self.sendMessage;
-                                window._msgManager.receiveMsg = self.receiveMsg;
+                                window.clientHub.sendMsg = self.sendMessage;
+                                window.clientHub.receiveMsg = self.receiveMsg;
                                 self.setState({ isLogin: true, LoginUser: resultLoginUser, selectedKey: window.defaultSelectedKey, NoReadMessageCount: 0 });
                                 //注册整体管理
                                 window.NewSelectKey = null;
-                                console.log("!!!!!!!!!");
+                                console.log("!!!!!!!!!",result);
                                 window.OftenListAdd = function (friendKey, type) {
                                     window.msgManager.myOftenListAdd({ FriendKey: friendKey, Type: type })
                                         .done(function (result) {

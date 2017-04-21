@@ -13,6 +13,10 @@ namespace LoadManagementModels
     {
         public string Token { get; set; }
         public string Device { get; set; }
+        /// <summary>
+        /// 登录类型,如果是pc是1,如果是手机是2
+        /// </summary>
+        public string Type { get; set; }
     }
     /// <summary>
     /// 用于客户端登录
@@ -27,6 +31,15 @@ namespace LoadManagementModels
         /// 密码
         /// </summary>
         public string Password { get; set; }
+        /// <summary>
+        /// 设备id
+        /// </summary>
+        public string Device { get; set; }
+
+        /// <summary>
+        /// 登录类型,如果是pc是1,如果是手机是2
+        /// </summary>
+        public string Type { get; set; }
     }
     /// <summary>
     /// 用于返回给客户端的东西
@@ -67,6 +80,10 @@ namespace LoadManagementModels
         /// 验证时间
         /// </summary>
         public DateTime LoginTime { get; set; }
+        /// <summary>
+        /// 登录类型,如果是pc是1,如果是手机是2
+        /// </summary>
+        public string Type { get; set; }
     }
     /// <summary>
     /// 用于头像服务器来消息服务器验证

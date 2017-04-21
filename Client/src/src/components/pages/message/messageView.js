@@ -28,7 +28,7 @@ export default class messageView extends Component {
     componentDidMount() {
         var self = this;
 
-        window._msgManager.sendMsg = function (resultMsg) {
+        window.clientHub.sendMsg = function (resultMsg) {
             window.msgManager.sendMsgReturn({ NoSendKey: resultMsg.NoSendKey })
             //先找到原来的,如果原来的中间不存在,则创建一个新的放在最前边
             //如果找到原来的,则将原来的数字加1并放在最前边
@@ -73,7 +73,8 @@ export default class messageView extends Component {
             else {
                 //先进行添加.然后在添加
                 if (resultMsg.Type == "1") {
-                    window.msgManager.myOftenListAdd({ FriendKey: resultMsg.SendKey, Type: resultMsg.Type, LastMsgContext: oldOften.LastMsgContext })
+                    console.log("!!!!!!!!!!!!",oldOften);
+                    window.msgManager.myOftenListAdd({ FriendKey: resultMsg.SendKey, Type: resultMsg.Type, LastMsgContext: resultMsg.Context })
                         .done(function (result) {
                             result.MessageCount++;
                             result.LastMsgContext = resultMsg.Context;
@@ -84,7 +85,7 @@ export default class messageView extends Component {
                         });
                 }
                 else {
-                    window.msgManager.myOftenListAdd({ FriendKey: resultMsg.ReceivedKey, Type: resultMsg.Type, LastMsgContext: oldOften.LastMsgContext })
+                    window.msgManager.myOftenListAdd({ FriendKey: resultMsg.ReceivedKey, Type: resultMsg.Type, LastMsgContext: resultMsg.Context })
                         .done(function (result) {
                             result.MessageCount++;
                             result.LastMsgContext = resultMsg.SendName + "：" + resultMsg.Context;
@@ -97,7 +98,7 @@ export default class messageView extends Component {
             }
         };
 
-        window._msgManager.receiveMsg = function (result) {
+        window.clientHub.receiveMsg = function (result) {
             for (var i = 0; i < window.oftens.length; i++) {
                 if (result.Type == "1") {
                     if (self.state.activeKey != window.oftens[i].Key && window.oftens[i].FriendKey == result.SendKey) {
@@ -116,7 +117,7 @@ export default class messageView extends Component {
             }
             self.setState({ newMessage: result });
         };
-        window._orgManager.deleteGroupSend = function (groupInfo) {
+        window.clientHub.deleteGroupSend = function (groupInfo) {
             //第一步更新
             for (var i = 0; i < window.oftens.length; i++) {
                 if (window.oftens[i].FriendKey == groupInfo.Key) {

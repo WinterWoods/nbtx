@@ -13,11 +13,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.litesuits.orm.LiteOrm;
 import com.syd.common.log.Log;
 import com.syd.common.utils.ToastUtil;
 import com.syd.okhttp.callback.Callback;
 import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
 import com.syd.safetymsg.Models.HttpsApi.UserInfo;
+import com.syd.safetymsg.Models.sqlite.ConfigModel;
 
 import okhttp3.Call;
 import okhttp3.Request;
@@ -34,6 +36,7 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
     private SignalrService service;
     private MyServiceConn conn;
 
+    private LiteOrm liteOrm;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +44,7 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
         InitView();
         handlerEvent();
         context = this;
-
+        liteOrm = ((ThisApplication) getApplication()).liteOrm;
         conn=new MyServiceConn();
 
     }
@@ -80,10 +83,12 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
     }
 
     private void LoadData() {
-
+        String uniqueId = DeviceUtils.GetDeviceId(this);
         CommHttp.post("AuthorizationManager/LoginService")
                 .addParams("LoginName", et_name.getText().toString())
                 .addParams("Password", et_password.getText().toString())
+                .addParams("Device", uniqueId)
+                .addParams("Typ", "2")
                 .build().execute(new Callback<LoginAuthUserOKModel>() {
             @Override
             public void onBefore(Request request, int id) {
@@ -104,7 +109,11 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
 
             @Override
             public void onResponse(LoginAuthUserOKModel response, int id) {
-
+                ConfigModel config = liteOrm.queryById(1, ConfigModel.class);
+                if (config != null) {
+                    config.setToken(response.getGuidAuth());
+                    liteOrm.save(config);
+                }
                 Log.i(TAG, "正确-->" + response.getConnServiceIP() + response.getConnServicePort());
                 SignalrService.model = response;
 //                SignalrService.model.setConnServiceIP("172.16.42.247");

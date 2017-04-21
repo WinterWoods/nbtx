@@ -19,6 +19,7 @@ namespace MessageManager.SignalR
     [LoginAuthorize]
     public class MsgManager : Hub
     {
+        IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ClientManager>();
         public static List<string> Users = new List<string>();
         public string GetTicket()
         {
@@ -39,14 +40,18 @@ namespace MessageManager.SignalR
         public override Task OnDisconnected(bool stopCalled)
         {
             var user = Context.User();
+
             if (user != null)
             {
                 using (DB db = new DB())
                 {
-                    var tmp = db.UserInfo.Where(w => w.HubId == user.HubId).ToEntity();
+                    var tmp = db.UserInfo.Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).ToEntity();
                     if (tmp != null)
                     {
-                        tmp.HubId = "";
+                        if (tmp.HubId == Context.ConnectionId)
+                            tmp.HubId = "";
+                        if (tmp.PhoneHubId == Context.ConnectionId)
+                            tmp.PhoneHubId = "";
                         db.UserInfo.Edit(tmp);
                         db.Save();
                     }
@@ -201,7 +206,12 @@ namespace MessageManager.SignalR
                             //如果找到这个用户,发现没有登陆,记录在待发消息列表
                             if (!string.IsNullOrEmpty(sendUser.HubId))
                             {
-                                Clients.Client(sendUser.HubId).sendMsg(msg);
+                                context.Clients.Client(sendUser.HubId).sendMsg(msg);
+                            }
+                            //如果找到这个用户,发现没有登陆,记录在待发消息列表
+                            if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+                            {
+                                context.Clients.Client(sendUser.PhoneHubId).sendMsg(msg);
                             }
                         }
 
@@ -250,13 +260,17 @@ namespace MessageManager.SignalR
                                         {
                                             msgList.Add(_user.HubId, msg);
                                         }
+                                        if (!string.IsNullOrEmpty(_user.PhoneHubId))
+                                        {
+                                            msgList.Add(_user.PhoneHubId, msg);
+                                        }
 
                                     }
                                 }
                                 db.Save();
                                 foreach (var tmp in msgList)
                                 {
-                                    Clients.Client(tmp.Key).sendMsg(tmp.Value);
+                                    context.Clients.Client(tmp.Key).sendMsg(tmp.Value);
 
                                 }
                             }
@@ -303,7 +317,11 @@ namespace MessageManager.SignalR
                         var sendUser = db.UserInfo.Find(msg.SendKey);
                         if (!string.IsNullOrEmpty(sendUser.HubId))
                         {
-                            Clients.Client(sendUser.HubId).msgReadedList(msg);
+                            context.Clients.Client(sendUser.HubId).msgReadedList(msg);
+                        }
+                        if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+                        {
+                            context.Clients.Client(sendUser.PhoneHubId).msgReadedList(msg);
                         }
                         db.MsgInfo.Edit(msg);
                     }
@@ -324,7 +342,11 @@ namespace MessageManager.SignalR
                             var sendUser = db.UserInfo.Find(msg.SendKey);
                             if (!string.IsNullOrEmpty(sendUser.HubId))
                             {
-                                Clients.Client(sendUser.HubId).msgReadedList(msg);
+                                context.Clients.Client(sendUser.HubId).msgReadedList(msg);
+                            }
+                            if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+                            {
+                                context.Clients.Client(sendUser.PhoneHubId).msgReadedList(msg);
                             }
                         }
 
@@ -360,7 +382,7 @@ namespace MessageManager.SignalR
 
                         var user = db1.UserInfo.Find(myUser.Key);
                         //发送前进行验证是否已经下线
-                        if (myUser != null && !string.IsNullOrEmpty(myUser.HubId))
+                        if (myUser != null)
                         {
                             MsgModel msg = new MsgModel();
                             msg.Key = msgInfo.Key;
@@ -372,7 +394,14 @@ namespace MessageManager.SignalR
                             msg.Type = msgInfo.Type;
                             msg.MsgType = msgInfo.MsgType;
                             msg.NoSendKey = _msg.Key;
-                            Clients.Client(user.HubId).sendMsg(msg);
+                            if (!string.IsNullOrEmpty(user.HubId))
+                            {
+                                context.Clients.Client(user.HubId).sendMsg(msg);
+                            }
+                            if (!string.IsNullOrEmpty(user.PhoneHubId))
+                            {
+                                context.Clients.Client(user.PhoneHubId).sendMsg(msg);
+                            }
                         }
                     }
                 }
@@ -452,7 +481,11 @@ namespace MessageManager.SignalR
                             //如果找到这个用户,发现没有登陆,记录在待发消息列表
                             if (!string.IsNullOrEmpty(sendUser.HubId))
                             {
-                                Clients.Client(sendUser.HubId).sendMsg(_msg);
+                                context.Clients.Client(sendUser.HubId).sendMsg(_msg);
+                            }
+                            if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+                            {
+                                context.Clients.Client(sendUser.PhoneHubId).sendMsg(_msg);
                             }
                         }
                     }
@@ -494,11 +527,15 @@ namespace MessageManager.SignalR
                                     {
                                         msgList.Add(_user.HubId, _msg);
                                     }
+                                    if (!string.IsNullOrEmpty(_user.PhoneHubId))
+                                    {
+                                        msgList.Add(_user.PhoneHubId, _msg);
+                                    }
                                 }
                                 db.Save();
                                 foreach (var tmp in msgList)
                                 {
-                                    Clients.Client(tmp.Key).sendMsg(tmp.Value);
+                                    context.Clients.Client(tmp.Key).sendMsg(tmp.Value);
                                 }
 
                             }
@@ -523,11 +560,18 @@ namespace MessageManager.SignalR
                     {
                         //需要判断是群聊还是个人，如果是个人的话直接撤销。如果是群聊需要找到所有人进行撤销
                         var receiveUser = db.UserInfo.Find(msg.ReceivedKey);
-                        if (receiveUser != null && !string.IsNullOrEmpty(receiveUser.HubId))
+                        if (receiveUser != null)
                         {
                             msg.MsgType = "9";
                             msg.Context = "";
-                            Clients.Client(receiveUser.HubId).receiveMsg(msg);
+                            if (!string.IsNullOrEmpty(receiveUser.HubId))
+                            {
+                                context.Clients.Client(receiveUser.HubId).receiveMsg(msg);
+                            }
+                            if (!string.IsNullOrEmpty(receiveUser.PhoneHubId))
+                            {
+                                context.Clients.Client(receiveUser.PhoneHubId).receiveMsg(msg);
+                            }
                         }
                     }
                     else
@@ -538,11 +582,18 @@ namespace MessageManager.SignalR
                         var userList = db.GroupUser.Where(w => w.GroupKey == group.Key && w.IsExit == false).ToList();
                         userList.ForEach(f => {
                             var receiveUser = db.UserInfo.Find(f.UserKey);
-                            if (receiveUser != null && !string.IsNullOrEmpty(receiveUser.HubId))
+                            if (receiveUser != null)
                             {
                                 msg.MsgType = "9";
                                 msg.Context = "";
-                                Clients.Client(receiveUser.HubId).receiveMsg(msg);
+                                if(!string.IsNullOrEmpty(receiveUser.HubId))
+                                {
+                                    context.Clients.Client(receiveUser.HubId).receiveMsg(msg);
+                                }
+                                if (!string.IsNullOrEmpty(receiveUser.PhoneHubId))
+                                {
+                                    context.Clients.Client(receiveUser.PhoneHubId).receiveMsg(msg);
+                                }
                             }
                         });
                     }

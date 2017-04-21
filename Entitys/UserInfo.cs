@@ -35,7 +35,12 @@ namespace Entitys
         /// 客户端消息
         /// </summary>
         [SZORM.SZColumn(MaxLength = 100)]
-        public string HubId { get; set; } 
+        public string HubId { get; set; }
+        /// <summary>
+        /// 手机端消息
+        /// </summary>
+        [SZORM.SZColumn(MaxLength = 100)]
+        public string PhoneHubId { get; set; }
         /// <summary>
         /// 最后一次登录时间
         /// </summary>
@@ -69,13 +74,17 @@ namespace Entitys
         /// <summary>
         /// 用户设备
         /// </summary>
-        [SZORM.SZColumn(MaxLength = 32)]
-        public string User_Device { get; set; }
+        [SZORM.SZColumn(MaxLength = 50)]
+        public string UserDevice { get; set; }
         /// <summary>
         /// token
         /// </summary>
-        [SZORM.SZColumn(MaxLength = 32)]
-        public string User_Token { get; set; }
+        [SZORM.SZColumn(MaxLength = 100)]
+        public string UserToken { get; set; }
+        /// <summary>
+        /// 最后登录时间
+        /// </summary>
+        public DateTime LastLoginTime { get; set; }
     }
     /// <summary>
     /// 系统配置,云端保存

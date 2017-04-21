@@ -3,14 +3,17 @@ package com.syd.safetymsg;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -26,6 +29,7 @@ import com.litesuits.orm.log.OrmLog;
 import com.syd.common.log.Log;
 import com.syd.okhttp.callback.Callback;
 import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
+import com.syd.safetymsg.Models.HttpsApi.UserInfo;
 import com.syd.safetymsg.Models.sqlite.ConfigModel;
 
 import java.io.IOException;
@@ -33,7 +37,7 @@ import java.util.List;
 
 import okhttp3.Call;
 
-public class WelcomeActivity extends Activity implements View.OnClickListener {
+public class WelcomeActivity extends Activity implements View.OnClickListener,SignalrService.Callback {
     private String TAG = getClass().getName();
     private Handler handler;
 
@@ -42,6 +46,9 @@ public class WelcomeActivity extends Activity implements View.OnClickListener {
     private Context context;
 
     private LiteOrm liteOrm;
+
+    private SignalrService service;
+    private MyServiceConn conn;
 
     // 要申请的权限
     private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_PHONE_STATE};
@@ -52,6 +59,7 @@ public class WelcomeActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
+        conn=new MyServiceConn();
         liteOrm = ((ThisApplication) getApplication()).liteOrm;
 
         setContentView(R.layout.activity_welcome);
@@ -210,10 +218,47 @@ public class WelcomeActivity extends Activity implements View.OnClickListener {
         }
     }
 
+    @Override
+    public void error() {
+
+    }
+
+    @Override
+    public void connected() {
+
+    }
+
+    @Override
+    public void closed() {
+
+    }
+
+    @Override
+    public void successed(UserInfo userInfo) {
+        Intent intent = new Intent(context, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    public class MyServiceConn implements ServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            service = ((SignalrService.MyBinder) binder).getService();
+            //将当前activity添加到接口集合中
+            service.setCallback(WelcomeActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // TODO Auto-generated method stub
+            service = null;
+        }
+    }
     //获取单实例
     private void LoadData() throws IOException {
         String uniqueId = DeviceUtils.GetDeviceId(this);
-        ConfigModel config = liteOrm.queryById(0, ConfigModel.class);
+        ConfigModel config = liteOrm.queryById(1, ConfigModel.class);
         if (config == null) {
             config = new ConfigModel();
             config.setToken("");
@@ -223,6 +268,7 @@ public class WelcomeActivity extends Activity implements View.OnClickListener {
         CommHttp.post("AuthorizationManager/TestConnService")
                 .addParams("Token", config.getToken())
                 .addParams("Device", uniqueId)
+                .addParams("Typ", "2")
                 .build().execute(new Callback<LoginAuthUserOKModel>() {
             @Override
             public void onError(Call call, Exception e, int id) {
@@ -243,12 +289,12 @@ public class WelcomeActivity extends Activity implements View.OnClickListener {
                     finalConfig.setToken(response.getGuidAuth());
                     liteOrm.save(finalConfig);
 
-                    List list = liteOrm.query(ConfigModel.class);
-                    OrmLog.i(TAG, list);
+                    SignalrService.model = response;
 
-                    Intent intent = new Intent(context, MainActivity.class);
-                    startActivity(intent);
-                    finish();
+                    Intent startIntent = new Intent(context, SignalrService.class);
+                    startService(startIntent);
+                    bindService(new Intent(context, SignalrService.class), conn,
+                            BIND_AUTO_CREATE);
                 }
             }
         });
