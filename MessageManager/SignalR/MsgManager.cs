@@ -176,6 +176,7 @@ namespace MessageManager.SignalR
                     //更新发送人的消息记录
                     var often = db.OftenList.Where(w => w.UserKey == myUser.Key && w.FriendKey == model.ReceivedKey).ToEntity();
                     often.LastMsgContext = model.Context;
+                    often.LastTime = DateTime.Now;
                     db.OftenList.Edit(often);
                     if (model.Type == "1")
                     {

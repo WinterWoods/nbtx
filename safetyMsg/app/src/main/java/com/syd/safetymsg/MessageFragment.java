@@ -29,11 +29,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+import com.daimajia.swipe.SimpleSwipeListener;
+import com.daimajia.swipe.SwipeLayout;
+import com.daimajia.swipe.adapters.BaseSwipeAdapter;
 import com.google.gson.JsonElement;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.syd.safetymsg.Models.HttpsApi.MsgModel;
 import com.syd.safetymsg.Models.HttpsApi.OftenList;
 import com.syd.safetymsg.Models.HttpsApi.UserInfo;
+import com.yalantis.phoenix.PullToRefreshView;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -53,7 +60,7 @@ import static android.content.Context.BIND_AUTO_CREATE;
  * Created by 78967 on 2017/2/15.
  */
 
-public class MessageFragment extends Fragment {
+public class MessageFragment extends Fragment implements SignalrService.clientCallback {
     private String TAG = getClass().getName();
     private ListView mListView;
     private MessageListViewAdapter mTitleAdapter;
@@ -64,9 +71,13 @@ public class MessageFragment extends Fragment {
     private MainActivity mainActivity;
     public MessageFragment(MainActivity activity){
         mainActivity=activity;
+        mainActivity.ClientCallback=MessageFragment.this;
     }
 
-    AdapterView.OnItemClickListener mTitleListener = new AdapterView.OnItemClickListener() {
+    PullToRefreshView mPullToRefreshView;
+    public static final int REFRESH_DELAY = 2000;
+
+    AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             String title = null;
@@ -81,6 +92,13 @@ public class MessageFragment extends Fragment {
             }
         }
     };
+    AdapterView.OnItemLongClickListener mLongClickListener = new AdapterView.OnItemLongClickListener() {
+
+        @Override
+        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            return false;
+        }
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -89,9 +107,23 @@ public class MessageFragment extends Fragment {
         mListView = (ListView) view.findViewById(R.id.listView);
         mTitleAdapter = new MessageListViewAdapter();
         mListView.setAdapter(mTitleAdapter);
-        mListView.setOnItemClickListener(mTitleListener);
+        mListView.setOnItemClickListener(mItemClickListener);
+        mListView.setOnItemLongClickListener(mLongClickListener);
         //绑定加载中等组件
         lLoadingView=view.findViewById(R.id.layout_loading);
+        mPullToRefreshView = (PullToRefreshView) view.findViewById(R.id.pull_to_refresh);
+        mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                LoadData();
+                mPullToRefreshView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPullToRefreshView.setRefreshing(false);
+                    }
+                }, REFRESH_DELAY);
+            }
+        });
         handlerEvent();
         LoadData();
         return view;
@@ -102,13 +134,12 @@ public class MessageFragment extends Fragment {
         handler = new Handler() {
             public void handleMessage(Message msg) {
                 if (msg.what == 0) {
-                    //msg.obj是获取handler发送信息传来的数据
-                    //@SuppressWarnings("unchecked")
-                    //List<TitleData> person = (List<TitleData>) msg.obj;
-                    //给ListView绑定数据
-
+                    mPullToRefreshView.setRefreshing(false);
                     mListView.setVisibility(View.VISIBLE);
                     lLoadingView.setVisibility(View.GONE);
+                    mTitleAdapter.notifyDataSetChanged();
+                }
+                if (msg.what == 1) {
                     mTitleAdapter.notifyDataSetChanged();
                 }
             }
@@ -122,19 +153,20 @@ public class MessageFragment extends Fragment {
         mainActivity.service.sendMsg(OftenList[].class,"myOftenList", new SignalrService.sendCallback<OftenList[]>() {
             @Override
             public void successed(OftenList[] obj) {
+                mOftenList.clear();
                 for(OftenList often:obj){
                     Log.i(TAG,often.getUserKey());
                     mOftenList.add(often);
                 }
                 Message msg = new Message();
                 msg.what = 0;
-                msg.obj = mOftenList;
                 handler.sendMessage(msg);
             }
         });
     }
 
-    class MessageListViewAdapter extends BaseAdapter {
+
+    class MessageListViewAdapter extends BaseSwipeAdapter {
 
         @Override
         public int getCount() {
@@ -152,21 +184,44 @@ public class MessageFragment extends Fragment {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder viewHolder;
-            View view = convertView;
+        public int getSwipeLayoutResourceId(int position) {
+            return R.id.swipe;
+        }
 
-            if (view == null) {
-                view = getActivity().getLayoutInflater().inflate(R.layout.message_list_item, null);
+        @Override
+        public View generateView(int position, ViewGroup parent) {
+
+            View view = getActivity().getLayoutInflater().inflate(R.layout.message_list_item, null);
+            SwipeLayout swipeLayout = (SwipeLayout)view.findViewById(getSwipeLayoutResourceId(position));
+            swipeLayout.addSwipeListener(new SimpleSwipeListener() {
+                @Override
+                public void onOpen(SwipeLayout layout) {
+                    YoYo.with(Techniques.Tada).duration(500).delay(100).playOn(layout.findViewById(R.id.trash));
+                }
+            });
+            view.findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Toast.makeText(getActivity(), "click delete", Toast.LENGTH_SHORT).show();
+                }
+            });
+            ViewHolder viewHolder;
+            viewHolder = (ViewHolder) view.getTag();
+            if (viewHolder == null) {
                 viewHolder = new ViewHolder();
                 viewHolder.mTitleImageView = (ImageView) view.findViewById(R.id.titleImageView);
                 viewHolder.mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
                 viewHolder.mMessageTextView = (TextView) view.findViewById(R.id.messageTextView);
                 viewHolder.mTimeTextView = (TextView) view.findViewById(R.id.timeTextView);
                 view.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) view.getTag();
             }
+
+
+            return view;
+        }
+        @Override
+        public void fillValues(int position, View convertView){
+            ViewHolder viewHolder = (ViewHolder) convertView.getTag();
 
             final OftenList data = (OftenList) getItem(position);
             viewHolder.mTitleTextView.setText(data.getFriendName());
@@ -177,7 +232,6 @@ public class MessageFragment extends Fragment {
                 viewHolder.mTimeTextView.setText(Utils.dateFormat(data.getLastTime()));
             else
                 viewHolder.mTimeTextView.setText(Utils.dateFormat(data.getEditTime()));
-            return view;
         }
 
         class ViewHolder {
@@ -186,5 +240,47 @@ public class MessageFragment extends Fragment {
             protected TextView mMessageTextView;
             protected  TextView mTimeTextView;
         }
+    }
+
+
+    @Override
+    public void exceptionHandler(String errMsg) {
+
+    }
+
+    @Override
+    public void sendMsg(MsgModel model) {
+
+        //便利列表是否存在,如果存在修改,如果不存在则添加一个
+        OftenList oldOften=null;
+        for (OftenList _often:mOftenList){
+            if(model.getType().equals("1")){
+                //如果是个人聊天
+                if(_often.getFriendKey().equals(model.getSendKey())) {
+                    //如果找到了
+                    oldOften=_often;
+                    break;
+                }
+            }
+            else{
+                //如果是群聊
+                if(_often.getFriendKey().equals(model.getReceivedKey())){
+                    //如果找到了
+                    oldOften=_often;
+                    break;
+                }
+            }
+        }
+        if(oldOften!=null)
+        mOftenList.remove(oldOften);
+        oldOften.setLastMsgContext(model.getContext());
+        oldOften.setLastTime(model.getSendTime());
+        int newCount=oldOften.getMessageCount()+1;
+        oldOften.setMessageCount(newCount);
+        mOftenList.add(0,oldOften);
+        Message msg = new Message();
+        msg.what = 1;
+        msg.obj=oldOften;
+        handler.sendMessage(msg);
     }
 }

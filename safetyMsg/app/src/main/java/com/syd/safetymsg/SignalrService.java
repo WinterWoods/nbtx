@@ -9,15 +9,22 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.view.View;
 
+import com.alibaba.fastjson.JSON;
 import com.google.gson.JsonElement;
 import com.syd.common.log.Log;
 import com.syd.safetymsg.Models.HttpsApi.FileAuthServiceModel;
 import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
+import com.syd.safetymsg.Models.HttpsApi.MsgModel;
 import com.syd.safetymsg.Models.HttpsApi.UserInfo;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import microsoft.aspnet.signalr.client.Action;
@@ -123,11 +130,10 @@ public class SignalrService extends Service {
     public interface clientCallback {
         public void exceptionHandler(String errMsg);
 
-        public void sendMsg();
-
-        public void receiveMsg();
-
-        public void msgReadedList();
+        public void sendMsg(MsgModel model);
+    }
+    public void  setClientCallback(clientCallback _clientCallback){
+        clientCallback=_clientCallback;
     }
     public void initHubProxy(){
         // 开始执行后台任务
@@ -139,6 +145,13 @@ public class SignalrService extends Service {
             @Override
             public void run(JsonElement[] obj) throws Exception {
                 Log.i(TAG,obj[0].toString());
+                if(clientCallback!=null){
+                    MsgModel result=  JSON.parseObject(obj[0].toString(),MsgModel.class);
+                    Map<String,String> par=new HashMap<String, String>();
+                    par.put("NoSendKey",result.getNoSendKey());
+                    mHubProxy_msgManager.invoke("sendMsgReturn",par);
+                    clientCallback.sendMsg(result);
+                }
             }
         });
     }
@@ -194,7 +207,6 @@ public class SignalrService extends Service {
                 mHubProxy_userManager.invoke(UserInfo.class,"signIn",model).done(new Action<UserInfo>() {
                     @Override
                     public void run(final UserInfo userInfo) throws Exception {
-
                         mHubProxy_fileManager.invoke(FileAuthServiceModel.class,"getPhotoService").done(new Action<FileAuthServiceModel>() {
                             @Override
                             public void run(FileAuthServiceModel fileAuthServiceModel) throws Exception {

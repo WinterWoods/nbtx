@@ -1,9 +1,6 @@
 package com.syd.safetymsg;
 
 import android.app.Application;
-import android.app.Service;
-import android.os.Vibrator;
-import android.util.Log;
 import com.litesuits.orm.LiteOrm;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -18,8 +15,10 @@ import okhttp3.OkHttpClient;
 
 public class ThisApplication extends Application {
     public LiteOrm liteOrm;
+    public static ThisApplication instance;
     public void onCreate() {
         super.onCreate();
+        instance = this;
         /**
          * 初始化数据库访问类
          * */
@@ -42,5 +41,8 @@ public class ThisApplication extends Application {
                 .defaultDisplayImageOptions(options)
                 .build();
         ImageLoader.getInstance().init(config);
+    }
+    public static ThisApplication getInstance() {
+        return instance;
     }
 }

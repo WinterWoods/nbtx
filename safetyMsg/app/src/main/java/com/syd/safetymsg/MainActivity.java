@@ -3,11 +3,14 @@ package com.syd.safetymsg;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
@@ -15,7 +18,10 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class MainActivity extends FragmentActivity implements OnClickListener {
+import com.syd.common.utils.ToastUtil;
+import com.syd.safetymsg.Models.HttpsApi.MsgModel;
+
+public class MainActivity extends FragmentActivity implements OnClickListener,SignalrService.clientCallback {
     // 初始化顶部栏显示
     private ImageView titleLeftImv;
     private TextView titleTv;
@@ -45,11 +51,26 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
     public SignalrService service;
     private MyServiceConn conn;
 
+    public SignalrService.clientCallback ClientCallback;
+
+    @Override
+    public void exceptionHandler(String errMsg) {
+        ToastUtil.showShort(this,errMsg);
+    }
+    //当接受到新的消息的时候
+    @Override
+    public void sendMsg(MsgModel model) {
+        //便利列表是否存在,如果存在修改,如果不存在则添加一个
+        if(ClientCallback!=null)
+            ClientCallback.sendMsg(model);
+    }
+
     public class MyServiceConn implements ServiceConnection {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((SignalrService.MyBinder) binder).getService();
+            service.setClientCallback(MainActivity.this);
             setChioceItem(0); // 初始化页面加载时显示第一个选项卡
         }
 
@@ -84,7 +105,8 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 //                //startActivity(new Intent(MainActivity.this, LoginActivity.class));
 //            }
 //        });
-        titleTv = (TextView) findViewById(R.id.title_text_tv);
+        titleLeftImv=(ImageView)findViewById(R.id.home_top_logo);
+        titleTv = (TextView) findViewById(R.id.textView_logo);
         titleTv.setText("首 页");
 // 初始化底部导航栏的控件
         firstImage = (ImageView) findViewById(R.id.first_image);
@@ -128,10 +150,10 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 
         switch (index) {
             case 0:
-// firstImage.setImageResource(R.drawable.XXXX); 需要的话自行修改
-                firstText.setTextColor(dark);
-                firstLayout.setBackgroundColor(gray);
-                titleTv.setText("聊天记录");
+                firstImage.setImageResource(R.drawable.home_bottom_tab_icon_message_highlight); //需要的话自行修改
+                firstText.setTextColor(ContextCompat.getColor(this, R.color.home_bottom_font_highlight));
+                titleTv.setVisibility(View.GONE);
+                titleLeftImv.setVisibility(View.VISIBLE);
 // 如果fg1为空，则创建一个并添加到界面上
                 if (messageFragment == null) {
                     messageFragment = new MessageFragment(this);
@@ -142,10 +164,11 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                 }
                 break;
             case 1:
-// secondImage.setImageResource(R.drawable.XXXX);
-                secondText.setTextColor(dark);
-                secondLayout.setBackgroundColor(gray);
+                secondImage.setImageResource(R.drawable.home_bottom_tab_icon_contact_highlight); //需要的话自行修改
+                secondText.setTextColor(ContextCompat.getColor(this, R.color.home_bottom_font_highlight));
                 titleTv.setText("联系人");
+                titleTv.setVisibility(View.VISIBLE);
+                titleLeftImv.setVisibility(View.GONE);
                 if (contactsFragment == null) {
                     contactsFragment = new ContactsFragment();
                     fragmentTransaction.add(R.id.content, contactsFragment);
@@ -154,10 +177,11 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                 }
                 break;
             case 3:
-// thirdImage.setImageResource(R.drawable.XXXX);
-                fourthText.setTextColor(dark);
-                fourthLayout.setBackgroundColor(gray);
-                titleTv.setText("我 的");
+                fourthImage.setImageResource(R.drawable.home_bottom_tab_icon_mine_highlight); //需要的话自行修改
+                fourthText.setTextColor(ContextCompat.getColor(this, R.color.home_bottom_font_highlight));
+                titleTv.setText("我的");
+                titleTv.setVisibility(View.VISIBLE);
+                titleLeftImv.setVisibility(View.GONE);
                 if (myFragment == null) {
                     myFragment = new MyFragment();
                     fragmentTransaction.add(R.id.content, myFragment);
@@ -172,15 +196,12 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
      * 当选中其中一个选项卡时，其他选项卡重置为默认
      */
     private void clearChioce() {
-// firstImage.setImageResource(R.drawable.XXX);
-        firstText.setTextColor(gray);
-        firstLayout.setBackgroundColor(whirt);
-// secondImage.setImageResource(R.drawable.XXX);
-        secondText.setTextColor(gray);
-        secondLayout.setBackgroundColor(whirt);
-// fourthImage.setImageResource(R.drawable.XXX);
-        fourthText.setTextColor(gray);
-        fourthLayout.setBackgroundColor(whirt);
+        firstText.setTextColor(ContextCompat.getColor(this, R.color.home_bottom_font_normal));
+        firstImage.setImageResource(R.drawable.home_bottom_tab_icon_message_normal);
+        secondText.setTextColor(ContextCompat.getColor(this, R.color.home_bottom_font_normal));
+        secondImage.setImageResource(R.drawable.home_bottom_tab_icon_contact_normal);
+        fourthText.setTextColor(ContextCompat.getColor(this, R.color.home_bottom_font_normal));
+        fourthImage.setImageResource(R.drawable.home_bottom_tab_icon_mine_normal);
     }
     /**
      * 隐藏Fragment
@@ -198,4 +219,5 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
             fragmentTransaction.hide(myFragment);
         }
     }
+    //这是最底层activity,不需要背景透明
 }

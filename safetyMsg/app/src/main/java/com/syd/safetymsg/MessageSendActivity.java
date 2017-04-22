@@ -1,13 +1,15 @@
 package com.syd.safetymsg;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
 import android.os.Bundle;
 
-public class MessageSendActivity extends AppCompatActivity {
+import com.syd.swipebacklayout.lib.app.SwipeBackActivity;
+
+
+public class MessageSendActivity extends SwipeBackActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_message_send);
     }
 }
