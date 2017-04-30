@@ -45,6 +45,10 @@ namespace MessageManager.Models
         /// 接受人，或者接受群
         /// </summary>
         public string ReceivedKey { get; set; }
+        /// <summary>
+        /// 接受者的名字,或者群名字
+        /// </summary>
+        public string ReceivedName { get; set; }
         public DateTime? SendTime { get; set; }
         /// <summary>
         /// 是否查看 如果为空就是未读

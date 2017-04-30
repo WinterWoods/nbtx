@@ -1,10 +1,21 @@
 <resources>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="home_bottom_font_size">12dp</dimen>
     <dimen name="home_top_font">16dp</dimen>
+    <!-- 聊天窗口,聊天内容,名字字体大小-->
+    <dimen name="message_send_top_font">18dp</dimen>
+    <dimen name="message_send_chat_font_size">17dp</dimen>
+    <!-- 聊天窗口,聊天内容,上下左右边距-->
+    <dimen name="message_send_chat_padding_left_right">10dp</dimen>
+    <dimen name="message_send_chat_padding_top_bottom">8dp</dimen>
+    <!-- 聊天窗口,最大宽度 -->
+    <dimen name="message_send_chat_width">280dp</dimen>
+    <!-- 聊天窗口,底部聊天框字体大小-->
+    <dimen name="message_send_edit_text_font_size">17dp</dimen>
 
+    <!-- 顶部图标大小-->
+    <dimen name="title_layout_head_ico_width_height">45dp</dimen>
 
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="SmallTextSize">14dp</dimen>
 </resources>

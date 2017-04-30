@@ -1,12 +1,14 @@
 package com.syd.safetymsg.Models.HttpsApi;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by east on 2017/4/22.
+ * 用于后台推送消息使用
  */
 
-public class MsgModel {
+public class MsgModel  implements Serializable {
     private String Key;
     private String SendKey;
     private String ReceivedKey;
@@ -15,6 +17,15 @@ public class MsgModel {
     private String Context;
     private boolean IsSend;
     private String Type;
+    private String ReceivedName;
+
+    public String getReceivedName() {
+        return ReceivedName;
+    }
+
+    public void setReceivedName(String receivedName) {
+        ReceivedName = receivedName;
+    }
 
     public String getKey() {
         return Key;

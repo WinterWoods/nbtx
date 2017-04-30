@@ -61,7 +61,7 @@ var common = {
             },
             {
                 test: /\.png|jpg|jpeg|gif|svg$/,
-                loader: "url?name=[path]/[name].[ext]&limit=10",
+                loader: "url?name=img/[name].[ext]&limit=10",
                 include: APP_PATH
             },
             { test: /\.TTF$/, loader: 'file?name=fonts/[name].[ext]' },

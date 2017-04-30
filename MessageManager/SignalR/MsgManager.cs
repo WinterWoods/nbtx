@@ -20,7 +20,6 @@ namespace MessageManager.SignalR
     public class MsgManager : Hub
     {
         IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ClientManager>();
-        public static List<string> Users = new List<string>();
         public string GetTicket()
         {
             return Context.ConnectionId;
@@ -28,13 +27,8 @@ namespace MessageManager.SignalR
         public override Task OnConnected()
         {
             var clientId = Context.ConnectionId;
-
-            if (Users.IndexOf(clientId) == -1)
-            {
-                Users.Add(clientId);
-            }
+            
             StartClass.manager.Proxy.Invoke("loginOne");
-            StartClass.log.WriteInfo("一个新用户连接了进来.");
             return base.OnConnected();
         }
         public override Task OnDisconnected(bool stopCalled)
@@ -58,7 +52,6 @@ namespace MessageManager.SignalR
                 }
             }
             StartClass.manager.Proxy.Invoke("logoutOne");
-            StartClass.log.WriteInfo("一个新用户退出了.");
             Context.SignOut();
             return base.OnDisconnected(stopCalled);
         }
@@ -167,6 +160,7 @@ namespace MessageManager.SignalR
             return Task.Factory.StartNew(() =>
             {
                 var myUser = Context.User();
+                
                 using (DB db = new DB())
                 {
                     model.SendKey = myUser.Key;
@@ -180,7 +174,6 @@ namespace MessageManager.SignalR
                     db.OftenList.Edit(often);
                     if (model.Type == "1")
                     {
-
                         UserInfo sendUser = db.UserInfo.Find(model.ReceivedKey);
                         //发送消息,如果找不到这个用户,不处理
                         if (sendUser != null)
@@ -190,30 +183,15 @@ namespace MessageManager.SignalR
                             msg.SendKey = myUser.Key;
                             msg.SendName = myUser.NickName;
                             msg.ReceivedKey = model.ReceivedKey;
+                            msg.ReceivedName = sendUser.NickName;
                             msg.SendTime = model.SendTime;
                             msg.Context = model.Context;
                             msg.Type = model.Type;
                             msg.MsgType = model.MsgType;
 
-                            MsgNoSendLog noSend = new MsgNoSendLog();
-                            noSend.MsgKey = model.Key;
-                            noSend.SendKey = model.ReceivedKey;
-                            noSend = db.MsgNoSendLog.Add(noSend);
-                            msg.NoSendKey = noSend.Key;
+                            SendClientMessageType1(db, sendUser, msg);
 
 
-
-                            db.Save();
-                            //如果找到这个用户,发现没有登陆,记录在待发消息列表
-                            if (!string.IsNullOrEmpty(sendUser.HubId))
-                            {
-                                context.Clients.Client(sendUser.HubId).sendMsg(msg);
-                            }
-                            //如果找到这个用户,发现没有登陆,记录在待发消息列表
-                            if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
-                            {
-                                context.Clients.Client(sendUser.PhoneHubId).sendMsg(msg);
-                            }
                         }
 
                     }
@@ -225,64 +203,153 @@ namespace MessageManager.SignalR
                         //发送消息
                         if (sendGroup != null)
                         {
-                            var groupUserList = db.GroupUser.Where(w => w.GroupKey == model.ReceivedKey && w.IsExit == false).ToList();
+                            
+                            MsgModel msg = new MsgModel();
+                            msg.Key = model.Key;
+                            msg.SendKey = myUser.Key;
+                            msg.SendName = myUser.NickName;
+                            msg.ReceivedKey = model.ReceivedKey;
+                            msg.ReceivedName = sendGroup.GroupName;
+                            msg.SendTime = model.SendTime;
+                            msg.Context = model.Context;
+                            msg.Type = model.Type;
+                            msg.MsgType = model.MsgType;
+                            //不在对自己发送
+                            SendClientMessageType2(db, msg);
 
-                            //查询发送消息用户是否在群中，如果不在则不能发送消息
-                            if (groupUserList.Any(a => a.UserKey == myUser.Key))
-                            {
 
 
-                                Dictionary<string, MsgModel> msgList = new Dictionary<string, MsgModel>();
-
-                                foreach (var user in groupUserList)
-                                {
-                                    MsgModel msg = new MsgModel();
-                                    msg.Key = model.Key;
-                                    msg.SendKey = myUser.Key;
-                                    msg.SendName = myUser.NickName;
-                                    msg.ReceivedKey = model.ReceivedKey;
-                                    msg.SendTime = model.SendTime;
-                                    msg.Context = model.Context;
-                                    msg.Type = model.Type;
-                                    msg.MsgType = model.MsgType;
-                                    //不在对自己发送
-                                    if (user.UserKey == myUser.Key) continue;
-
-                                    var _user = db.UserInfo.Find(user.UserKey);
-                                    if (_user != null)
-                                    {
-
-                                        MsgNoSendLog noSend = new MsgNoSendLog();
-                                        noSend.MsgKey = model.Key;
-                                        noSend.SendKey = _user.Key;
-                                        noSend = db.MsgNoSendLog.Add(noSend);
-                                        msg.NoSendKey = noSend.Key;
-                                        if (!string.IsNullOrEmpty(_user.HubId))
-                                        {
-                                            msgList.Add(_user.HubId, msg);
-                                        }
-                                        if (!string.IsNullOrEmpty(_user.PhoneHubId))
-                                        {
-                                            msgList.Add(_user.PhoneHubId, msg);
-                                        }
-
-                                    }
-                                }
-                                db.Save();
-                                foreach (var tmp in msgList)
-                                {
-                                    context.Clients.Client(tmp.Key).sendMsg(tmp.Value);
-
-                                }
-                            }
                         }
                     }
-                    //SendOftenUp(often);
-
                 }
 
                 return model;
             });
+        }
+        private void SendClientMessageType1(DB db,UserInfo sendUser,MsgModel msg)
+        {
+            var myUser = Context.User();
+            //如果找到这个用户,发现没有登陆,记录在待发消息列表
+            if (!string.IsNullOrEmpty(sendUser.HubId))
+            {
+                MsgNoSendLog noSend = new MsgNoSendLog();
+                noSend.MsgKey = msg.Key;
+                noSend.SendKey = msg.ReceivedKey;
+                noSend.Type = "1";
+                noSend = db.MsgNoSendLog.Add(noSend);
+                msg.NoSendKey = noSend.Key;
+                db.Save();
+                context.Clients.Client(sendUser.HubId).sendMsg(msg);
+            }
+            //如果找到这个用户,发现没有登陆,记录在待发消息列表
+            if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+            {
+                MsgNoSendLog noSend = new MsgNoSendLog();
+                noSend.MsgKey = msg.Key;
+                noSend.SendKey = msg.ReceivedKey;
+                noSend.Type = "2";
+                noSend = db.MsgNoSendLog.Add(noSend);
+                msg.NoSendKey = noSend.Key;
+                db.Save();
+                context.Clients.Client(sendUser.PhoneHubId).sendMsg(msg);
+            }
+            if (myUser.HubId == Context.ConnectionId && !string.IsNullOrEmpty(myUser.PhoneHubId))
+            {
+                MsgNoSendLog noSend = new MsgNoSendLog();
+                noSend.MsgKey = msg.Key;
+                noSend.SendKey = msg.SendKey;
+                noSend.Type = "2";
+                noSend = db.MsgNoSendLog.Add(noSend);
+                msg.NoSendKey = noSend.Key;
+                db.Save();
+                context.Clients.Client(myUser.PhoneHubId).sendMsg(msg);
+
+            }
+            if (myUser.PhoneHubId == Context.ConnectionId && !string.IsNullOrEmpty(myUser.HubId))
+            {
+                MsgNoSendLog noSend = new MsgNoSendLog();
+                noSend.MsgKey = msg.Key;
+                noSend.SendKey = msg.SendKey;
+                noSend.Type = "1";
+                noSend = db.MsgNoSendLog.Add(noSend);
+                msg.NoSendKey = noSend.Key;
+                db.Save();
+                context.Clients.Client(myUser.HubId).sendMsg(msg);
+            }
+        }
+        private void SendClientMessageType2(DB db, MsgModel msg)
+        {
+            Dictionary<string, MsgModel> msgList = new Dictionary<string, MsgModel>();
+            var groupUserList = db.GroupUser.Where(w => w.GroupKey == msg.ReceivedKey && w.IsExit == false).ToList();
+            var myUser = Context.User();
+            if (myUser.HubId == Context.ConnectionId && !string.IsNullOrEmpty(myUser.PhoneHubId))
+            {
+                MsgNoSendLog noSend = new MsgNoSendLog();
+                noSend.MsgKey = msg.Key;
+                noSend.SendKey = msg.SendKey;
+                noSend.Type = "2";
+                noSend = db.MsgNoSendLog.Add(noSend);
+                msg.NoSendKey = noSend.Key;
+                msgList.Add(myUser.PhoneHubId, msg);
+                //context.Clients.Client(myUser.PhoneHubId).sendMsg(msg);
+
+            }
+            if (myUser.PhoneHubId == Context.ConnectionId && !string.IsNullOrEmpty(myUser.HubId))
+            {
+                MsgNoSendLog noSend = new MsgNoSendLog();
+                noSend.MsgKey = msg.Key;
+                noSend.SendKey = msg.SendKey;
+                noSend.Type = "1";
+                noSend = db.MsgNoSendLog.Add(noSend);
+                msg.NoSendKey = noSend.Key;
+                msgList.Add(myUser.HubId, msg);
+                //context.Clients.Client(myUser.HubId).sendMsg(msg);
+            }
+
+            //查询发送消息用户是否在群中，如果不在则不能发送消息
+            if (groupUserList.Any(a => a.UserKey == myUser.Key))
+            {
+                foreach (var user in groupUserList)
+                {
+
+                    if (user.UserKey == myUser.Key) continue;
+
+                    var sendUser = db.UserInfo.Find(user.UserKey);
+                    if (sendUser != null)
+                    {
+                        //如果找到这个用户,发现没有登陆,记录在待发消息列表
+                        if (!string.IsNullOrEmpty(sendUser.HubId))
+                        {
+                            MsgNoSendLog noSend = new MsgNoSendLog();
+                            noSend.MsgKey = msg.Key;
+                            noSend.SendKey = sendUser.Key;
+                            noSend.Type = "1";
+                            noSend = db.MsgNoSendLog.Add(noSend);
+                            msg.NoSendKey = noSend.Key;
+                            msgList.Add(sendUser.HubId, msg);
+                            //context.Clients.Client(sendUser.HubId).sendMsg(msg);
+                        }
+                        //如果找到这个用户,发现没有登陆,记录在待发消息列表
+                        if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+                        {
+                            MsgNoSendLog noSend = new MsgNoSendLog();
+                            noSend.MsgKey = msg.Key;
+                            noSend.SendKey = msg.ReceivedKey;
+                            noSend.Type = "2";
+                            noSend = db.MsgNoSendLog.Add(noSend);
+                            msg.NoSendKey = noSend.Key;
+                            msgList.Add(sendUser.PhoneHubId, msg);
+                            //context.Clients.Client(sendUser.PhoneHubId).sendMsg(msg);
+                        }
+                    }
+                }
+                db.Save();
+                foreach (var tmp in msgList)
+                {
+                    context.Clients.Client(tmp.Key).sendMsg(tmp.Value);
+
+                }
+            }
         }
         /// <summary>
         /// 接受到消息必须返回,如果不返回,下次登录的时候还会发送.
@@ -324,6 +391,14 @@ namespace MessageManager.SignalR
                         {
                             context.Clients.Client(sendUser.PhoneHubId).msgReadedList(msg);
                         }
+                        else
+                        {
+                            //如果没有读,必须存起来,将来在告诉手机
+                            MsgPhoneReadSend phoneRead = new MsgPhoneReadSend();
+                            phoneRead.MsgKey = msg.Key;
+                            phoneRead.SendKey = msg.SendKey;
+                            db.MsgPhoneReadSend.Add(phoneRead);
+                        }
                         db.MsgInfo.Edit(msg);
                     }
                     else
@@ -349,6 +424,15 @@ namespace MessageManager.SignalR
                             {
                                 context.Clients.Client(sendUser.PhoneHubId).msgReadedList(msg);
                             }
+                            else
+                            {
+                                //如果没有读,必须存起来,将来在告诉手机
+                                //如果没有读,必须存起来,将来在告诉手机
+                                MsgPhoneReadSend phoneRead = new MsgPhoneReadSend();
+                                phoneRead.MsgKey = msg.Key;
+                                phoneRead.SendKey = msg.SendKey;
+                                db.MsgPhoneReadSend.Add(phoneRead);
+                            }
                         }
 
                     }
@@ -370,13 +454,17 @@ namespace MessageManager.SignalR
                 }
             });
         }
-        public void NoSendMsgGet()
+        public class NoSendMsg
+        {
+            public string Type { get; set; }
+        }
+        public void NoSendMsgGet(NoSendMsg model)
         {
             Task.Factory.StartNew(() => {
                 var myUser = Context.User();
                 using (DB db1 = new DB())
                 {
-                    var noSendMsg = db1.MsgNoSendLog.Where(w => w.SendKey == myUser.Key).ToList();
+                    var noSendMsg = db1.MsgNoSendLog.Where(w => w.SendKey == myUser.Key&&w.Type==model.Type).OrderBy(o=>o.EditTime).ToList();
                     foreach (var _msg in noSendMsg)
                     {
                         var msgInfo = db1.MsgInfo.Find(_msg.MsgKey);
@@ -390,24 +478,49 @@ namespace MessageManager.SignalR
                             msg.SendKey = msgInfo.SendKey;
                             msg.SendName = db1.UserInfo.Find(msgInfo.SendKey).NickName;
                             msg.ReceivedKey = msgInfo.ReceivedKey;
+                            msg.ReceivedName= db1.UserInfo.Find(msgInfo.ReceivedKey).NickName;
                             msg.SendTime = msgInfo.SendTime;
                             msg.Context = msgInfo.Context;
                             msg.Type = msgInfo.Type;
                             msg.MsgType = msgInfo.MsgType;
                             msg.NoSendKey = _msg.Key;
-                            if (!string.IsNullOrEmpty(user.HubId))
+                            if (model.Type == "1")
                             {
-                                context.Clients.Client(user.HubId).sendMsg(msg);
+                                if (!string.IsNullOrEmpty(user.HubId))
+                                {
+                                    context.Clients.Client(user.HubId).sendMsg(msg);
+                                }
                             }
-                            if (!string.IsNullOrEmpty(user.PhoneHubId))
+                            else
                             {
-                                context.Clients.Client(user.PhoneHubId).sendMsg(msg);
+                                if (!string.IsNullOrEmpty(user.PhoneHubId))
+                                {
+                                    context.Clients.Client(user.PhoneHubId).sendMsg(msg);
+                                }
                             }
+                            
                         }
                     }
                 }
 
             });
+            if (model.Type == "2")
+            {
+                Task.Factory.StartNew(() => {
+                    var myUser = Context.User();
+                    if (string.IsNullOrEmpty(myUser.PhoneHubId)) return;
+                    using (DB db = new DB())
+                    {
+                        List<MsgPhoneReadSend> list = db.MsgPhoneReadSend.Where(w => w.SendKey == myUser.Key).OrderBy(o => o.EditTime).ToList();
+                        foreach(var tmp in list)
+                        {
+                            var msg = db.MsgInfo.Find(tmp.MsgKey);
+                            if (msg!=null)
+                            context.Clients.Client(myUser.PhoneHubId).msgReadedList(msg);
+                        }
+                    }
+                });
+            }
         }
         /// <summary>
         /// 发送文件
@@ -473,21 +586,23 @@ namespace MessageManager.SignalR
                             _msg.MsgType = msg.MsgType;
                             _msg.FileUpOver = msg.FileUpOver;
 
-                            MsgNoSendLog noSend = new MsgNoSendLog();
-                            noSend.MsgKey = msg.Key;
-                            noSend.SendKey = msg.ReceivedKey;
-                            noSend = db.MsgNoSendLog.Add(noSend);
-                            _msg.NoSendKey = noSend.Key;
-                            db.Save();
-                            //如果找到这个用户,发现没有登陆,记录在待发消息列表
-                            if (!string.IsNullOrEmpty(sendUser.HubId))
-                            {
-                                context.Clients.Client(sendUser.HubId).sendMsg(_msg);
-                            }
-                            if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
-                            {
-                                context.Clients.Client(sendUser.PhoneHubId).sendMsg(_msg);
-                            }
+                            SendClientMessageType1(db, sendUser, _msg);
+
+                            //MsgNoSendLog noSend = new MsgNoSendLog();
+                            //noSend.MsgKey = msg.Key;
+                            //noSend.SendKey = msg.ReceivedKey;
+                            //noSend = db.MsgNoSendLog.Add(noSend);
+                            //_msg.NoSendKey = noSend.Key;
+                            //db.Save();
+                            ////如果找到这个用户,发现没有登陆,记录在待发消息列表
+                            //if (!string.IsNullOrEmpty(sendUser.HubId))
+                            //{
+                            //    context.Clients.Client(sendUser.HubId).sendMsg(_msg);
+                            //}
+                            //if (!string.IsNullOrEmpty(sendUser.PhoneHubId))
+                            //{
+                            //    context.Clients.Client(sendUser.PhoneHubId).sendMsg(_msg);
+                            //}
                         }
                     }
                     else
@@ -498,48 +613,50 @@ namespace MessageManager.SignalR
                         //发送消息
                         if (sendGroup != null)
                         {
-                            var groupUserList = db.GroupUser.Where(w => w.GroupKey == msg.ReceivedKey && w.IsExit == false).ToList();
-                            //查询发送消息用户是否在群中，如果不在则不能发送消息
-                            if (groupUserList.Any(a => a.UserKey == myUser.Key))
-                            {
-                                Dictionary<string, MsgModel> msgList = new Dictionary<string, MsgModel>();
+                            MsgModel _msg = new MsgModel();
+                            _msg.Key = msg.Key;
+                            _msg.SendKey = myUser.Key;
+                            _msg.SendName = myUser.NickName;
+                            _msg.ReceivedKey = msg.ReceivedKey;
+                            _msg.SendTime = msg.SendTime;
+                            _msg.Context = msg.Context;
+                            _msg.Type = msg.Type;
+                            _msg.MsgType = msg.MsgType;
+                            _msg.FileUpOver = msg.FileUpOver;
+                            SendClientMessageType2(db,  _msg);
+                            //var groupUserList = db.GroupUser.Where(w => w.GroupKey == msg.ReceivedKey && w.IsExit == false).ToList();
+                            ////查询发送消息用户是否在群中，如果不在则不能发送消息
+                            //if (groupUserList.Any(a => a.UserKey == myUser.Key))
+                            //{
+                            //    Dictionary<string, MsgModel> msgList = new Dictionary<string, MsgModel>();
 
-                                foreach (var user in groupUserList)
-                                {
-                                    MsgModel _msg = new MsgModel();
-                                    _msg.Key = msg.Key;
-                                    _msg.SendKey = myUser.Key;
-                                    _msg.SendName = myUser.NickName;
-                                    _msg.ReceivedKey = msg.ReceivedKey;
-                                    _msg.SendTime = msg.SendTime;
-                                    _msg.Context = msg.Context;
-                                    _msg.Type = msg.Type;
-                                    _msg.MsgType = msg.MsgType;
-                                    _msg.FileUpOver = msg.FileUpOver;
-                                    if (user.UserKey == myUser.Key) continue;
-                                    var _user = db.UserInfo.Find(user.UserKey);
+                            //    foreach (var user in groupUserList)
+                            //    {
+                                    
+                            //        if (user.UserKey == myUser.Key) continue;
+                            //        var _user = db.UserInfo.Find(user.UserKey);
 
-                                    MsgNoSendLog noSend = new MsgNoSendLog();
-                                    noSend.MsgKey = msg.Key;
-                                    noSend.SendKey = user.UserKey;
-                                    noSend = db.MsgNoSendLog.Add(noSend);
-                                    _msg.NoSendKey = noSend.Key;
-                                    if (!string.IsNullOrEmpty(_user.HubId))
-                                    {
-                                        msgList.Add(_user.HubId, _msg);
-                                    }
-                                    if (!string.IsNullOrEmpty(_user.PhoneHubId))
-                                    {
-                                        msgList.Add(_user.PhoneHubId, _msg);
-                                    }
-                                }
-                                db.Save();
-                                foreach (var tmp in msgList)
-                                {
-                                    context.Clients.Client(tmp.Key).sendMsg(tmp.Value);
-                                }
+                            //        MsgNoSendLog noSend = new MsgNoSendLog();
+                            //        noSend.MsgKey = msg.Key;
+                            //        noSend.SendKey = user.UserKey;
+                            //        noSend = db.MsgNoSendLog.Add(noSend);
+                            //        _msg.NoSendKey = noSend.Key;
+                            //        if (!string.IsNullOrEmpty(_user.HubId))
+                            //        {
+                            //            msgList.Add(_user.HubId, _msg);
+                            //        }
+                            //        if (!string.IsNullOrEmpty(_user.PhoneHubId))
+                            //        {
+                            //            msgList.Add(_user.PhoneHubId, _msg);
+                            //        }
+                            //    }
+                            //    db.Save();
+                            //    foreach (var tmp in msgList)
+                            //    {
+                            //        context.Clients.Client(tmp.Key).sendMsg(tmp.Value);
+                            //    }
 
-                            }
+                            //}
                         }
                     }
                     return file;

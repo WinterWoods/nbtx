@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
+    android:layout_height="45dp"
     android:layout_centerVertical="true"
     android:layout_centerHorizontal="true"
     android:layout_centerInParent="true"
@@ -30,29 +30,31 @@
         android:text=""
         android:textSize="@dimen/home_top_font"
         android:visibility="gone"
-        android:textColor="@color/home_top_logo_font"/>
+        android:textColor="@color/home_top_logo_font"
+        android:layout_marginLeft="10dp"/>
 
 
     <ImageView
         android:id="@+id/imageView_more"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/title_layout_head_ico_width_height"
+        android:layout_height="@dimen/title_layout_head_ico_width_height"
         android:scaleType="center"
         android:src="@drawable/ic_actbar_more"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="10dp"/>
+        android:layout_alignParentEnd="true" />
     <ImageView
         android:id="@+id/imageView_search"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/title_layout_head_ico_width_height"
+        android:layout_height="@dimen/title_layout_head_ico_width_height"
         android:scaleType="center"
         android:src="@drawable/ic_actbar_search"
         android:layout_alignTop="@+id/imageView_more"
         android:layout_toLeftOf="@+id/imageView_more"
-        android:layout_toStartOf="@+id/imageView_more"
-        android:layout_marginRight="10dp"/>
+        android:layout_toStartOf="@+id/imageView_more" />
 
-
+    <View  android:layout_height="1px"
+        android:layout_width="match_parent"
+        android:background="@color/home_bottom_top_line"
+        android:layout_alignParentBottom="true" />
 </RelativeLayout>

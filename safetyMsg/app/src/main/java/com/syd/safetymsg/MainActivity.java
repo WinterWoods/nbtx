@@ -1,16 +1,20 @@
 package com.syd.safetymsg;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
@@ -18,10 +22,14 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.syd.common.io.stream.StringBuilderWriter;
 import com.syd.common.utils.ToastUtil;
 import com.syd.safetymsg.Models.HttpsApi.MsgModel;
+import com.syd.safetymsg.Models.HttpsApi.OftenList;
+import com.syd.safetymsg.Models.HttpsApi.UserInfo;
 
-public class MainActivity extends FragmentActivity implements OnClickListener,SignalrService.clientCallback {
+public class MainActivity extends FragmentActivity implements OnClickListener,SignalrService.ClientCallback, SignalrService.Callback {
+    private Context context;
     // 初始化顶部栏显示
     private ImageView titleLeftImv;
     private TextView titleTv;
@@ -29,6 +37,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener,Si
     private MessageFragment messageFragment;
     private ContactsFragment contactsFragment;
     private MyFragment myFragment;
+    private Handler handler;
     // 帧布局对象，用来存放Fragment对象
     private FrameLayout frameLayout;
     // 定义每个选项中的相关控件
@@ -51,27 +60,75 @@ public class MainActivity extends FragmentActivity implements OnClickListener,Si
     public SignalrService service;
     private MyServiceConn conn;
 
-    public SignalrService.clientCallback ClientCallback;
+    public SignalrService.Callback Callback;
 
     @Override
     public void exceptionHandler(String errMsg) {
         ToastUtil.showShort(this,errMsg);
     }
-    //当接受到新的消息的时候
+
     @Override
     public void sendMsg(MsgModel model) {
-        //便利列表是否存在,如果存在修改,如果不存在则添加一个
-        if(ClientCallback!=null)
-            ClientCallback.sendMsg(model);
+
+    }
+    //当接受到新的消息的时候
+
+
+    @Override
+    public void reLoadOftenList() {
+
     }
 
-    public class MyServiceConn implements ServiceConnection {
+    @Override
+    public void editOftenInfo(OftenList often) {
+        //在这里修改有没有新消息
+    }
+
+    @Override
+    public void closed() {
+        Message message = new Message();
+        message.what = 1;
+        handler.sendMessage(message);
+        if(Callback!=null)
+            Callback.closed();
+    }
+
+    @Override
+    public void connected() {
+        Message message = new Message();
+        message.what = 2;
+        handler.sendMessage(message);
+        if(Callback!=null)
+            Callback.connected();
+
+    }
+
+
+    //接受线程消息
+    private void handlerEvent(){
+        //handler与线程之间的通信及数据处理
+        handler = new Handler() {
+            public void handleMessage(Message msg) {
+                if(msg.what == 2) {
+                    ToastUtil.showShort(context,"服务器连接成功!");
+                }
+                if(msg.what==1){
+                    ToastUtil.showShort(context,"服务器断开,正在尝试!");
+                }
+            }
+        };
+
+    }
+    class MyServiceConn implements ServiceConnection {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((SignalrService.MyBinder) binder).getService();
-            service.setClientCallback(MainActivity.this);
             setChioceItem(0); // 初始化页面加载时显示第一个选项卡
+            service.addClientCallback(MainActivity.this);
+            service.setCallback(MainActivity.this);
+
+
         }
 
         @Override
@@ -84,19 +141,27 @@ public class MainActivity extends FragmentActivity implements OnClickListener,Si
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context=this;
+        fragmentManager = getSupportFragmentManager();
+        initView(); // 初始化界面控件
+        handlerEvent();
+
+    }
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
         conn=new MyServiceConn();
         bindService(new Intent(this, SignalrService.class), conn,
                 BIND_AUTO_CREATE);
-        setContentView(R.layout.activity_main);
-        fragmentManager = getSupportFragmentManager();
-        initView(); // 初始化界面控件
-
 
     }
     /**
      * 初始化页面
      */
     private void initView() {
+
+        setContentView(R.layout.activity_main);
 // 初始化页面标题栏
 //        titleLeftImv = (ImageView) findViewById(R.id.title_imv);
 //        titleLeftImv.setOnClickListener(new OnClickListener() {
@@ -219,5 +284,12 @@ public class MainActivity extends FragmentActivity implements OnClickListener,Si
             fragmentTransaction.hide(myFragment);
         }
     }
-    //这是最底层activity,不需要背景透明
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            moveTaskToBack(false);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 }

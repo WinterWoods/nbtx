@@ -109,8 +109,7 @@ namespace LoadManagement.Api
                 authModel.GuidAuth = Guid.NewGuid().ToString();
                 authModel.LoginTime = DateTime.Now;
                 authModel.Type = loginType;
-
-                result.Key = user.Key;
+                
                 result.ConnServiceIP = ser.IP;
                 result.GuidAuth = authModel.GuidAuth;
                 result.ConnServicePort = ser.Port;

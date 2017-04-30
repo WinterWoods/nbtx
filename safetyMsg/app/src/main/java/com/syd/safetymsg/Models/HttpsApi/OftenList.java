@@ -1,12 +1,26 @@
 package com.syd.safetymsg.Models.HttpsApi;
 
+import com.litesuits.orm.db.annotation.PrimaryKey;
+import com.litesuits.orm.db.enums.AssignType;
+
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by east on 2017/4/20.
  */
 
-public class OftenList {
+public class OftenList implements Serializable {
+    @PrimaryKey(AssignType.BY_MYSELF)
+    private String Key;
+    private String FriendName;
+    private String FriendKey;
+    private Date LastTime;
+    private String LastMsgContext;
+    private int MessageCount;
+    private String Type;
+    private String IsRemove;
+
     public String UserKey;
 
     public String getUserKey() {
@@ -76,13 +90,15 @@ public class OftenList {
 
 
 
-    private String FriendName;
-    private String FriendKey;
-    private Date LastTime;
-    private String LastMsgContext;
-    private int MessageCount;
-    private String Type;
-    private String IsRemove;
+
+
+    public String getKey() {
+        return Key;
+    }
+
+    public void setKey(String key) {
+        Key = key;
+    }
 
     public Date getEditTime() {
         return EditTime;

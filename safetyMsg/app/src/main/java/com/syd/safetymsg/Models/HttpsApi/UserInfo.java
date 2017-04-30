@@ -1,10 +1,16 @@
 package com.syd.safetymsg.Models.HttpsApi;
 
+import com.litesuits.orm.db.annotation.PrimaryKey;
+import com.litesuits.orm.db.enums.AssignType;
+
+import java.io.Serializable;
+
 /**
  * Created by east on 2017/4/19.
  */
 
-public class UserInfo {
+public class UserInfo  implements Serializable {
+    @PrimaryKey(AssignType.BY_MYSELF)
     private String Key;
 
     public String getKey() {

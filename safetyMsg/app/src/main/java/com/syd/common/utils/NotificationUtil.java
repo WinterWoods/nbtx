@@ -61,10 +61,10 @@ public class NotificationUtil {
         Notification.Builder builder = new Notification.Builder(context);
         builder.setSmallIcon(icon);
 
+
         builder.setContentTitle(title);
         builder.setTicker(ticker);
         builder.setContentText(msg);
-
         builder.setDefaults(Notification.DEFAULT_SOUND);
         builder.setLights(0xFFFFFF00, 0, 2000);
         builder.setVibrate(new long[]{0, 100, 300});

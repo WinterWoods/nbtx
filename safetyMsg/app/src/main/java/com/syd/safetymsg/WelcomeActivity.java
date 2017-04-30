@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.log.OrmLog;
 import com.syd.common.log.Log;
+import com.syd.common.utils.ToastUtil;
 import com.syd.okhttp.callback.Callback;
 import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
 import com.syd.safetymsg.Models.HttpsApi.UserInfo;
@@ -37,7 +39,7 @@ import java.util.List;
 
 import okhttp3.Call;
 
-public class WelcomeActivity extends Activity implements View.OnClickListener,SignalrService.Callback {
+public class WelcomeActivity extends Activity implements View.OnClickListener,SignalrService.SignInCallbak {
     private String TAG = getClass().getName();
     private Handler handler;
 
@@ -65,7 +67,7 @@ public class WelcomeActivity extends Activity implements View.OnClickListener,Si
         setContentView(R.layout.activity_welcome);
 
         InitView();
-
+        handlerEvent();
         // 版本判断。当手机系统大于 23 时，才有必要去判断权限是否获取
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
@@ -213,28 +215,43 @@ public class WelcomeActivity extends Activity implements View.OnClickListener,Si
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button2:
-                finish();
+                try {
+                    LoadData();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
+    //接受线程消息
+    private void handlerEvent(){
+        //handler与线程之间的通信及数据处理
+        handler = new Handler() {
+            public void handleMessage(Message msg) {
+                if (msg.what == 0) {
+                    ToastUtil.showShort(context,(String)msg.obj);
+                    button.setVisibility(View.VISIBLE);
+                    textView3.setVisibility(View.GONE);
+                }
+            }
+        };
+    }
 
     @Override
-    public void error() {
+    public void error(String err) {
 
     }
 
     @Override
-    public void connected() {
-
+    public void reLogin() {
+        //如果没有登陆过,跳转登陆界面.
+        Intent intent = new Intent(context, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override
-    public void closed() {
-
-    }
-
-    @Override
-    public void successed(UserInfo userInfo) {
+    public void initMain() {
         Intent intent = new Intent(context, MainActivity.class);
         startActivity(intent);
         finish();
@@ -246,57 +263,34 @@ public class WelcomeActivity extends Activity implements View.OnClickListener,Si
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((SignalrService.MyBinder) binder).getService();
             //将当前activity添加到接口集合中
-            service.setCallback(WelcomeActivity.this);
+            service.setSignInCallback(WelcomeActivity.this);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             // TODO Auto-generated method stub
+            service.setSignInCallback(null);
             service = null;
         }
     }
+    @Override
+    protected void onDestroy() {
+        // TODO Auto-generated method stub
+        super.onDestroy();
+        unbindService(conn);
+    }
     //获取单实例
     private void LoadData() throws IOException {
-        String uniqueId = DeviceUtils.GetDeviceId(this);
-        ConfigModel config = liteOrm.queryById(1, ConfigModel.class);
-        if (config == null) {
-            config = new ConfigModel();
-            config.setToken("");
-            liteOrm.save(config);
+        Intent startIntent = new Intent(context, SignalrService.class);
+        startService(startIntent);
+        bindService(new Intent(context, SignalrService.class), conn,
+                BIND_AUTO_CREATE);
+        ConfigModel model= ThisApplication.getInstance().liteOrm.queryById(1,ConfigModel.class);
+        if(model==null||!model.isInit()){
+            Intent intent = new Intent(context, LoginActivity.class);
+            startActivity(intent);
+            finish();
+
         }
-        final ConfigModel finalConfig = config;
-        CommHttp.post("AuthorizationManager/TestConnService")
-                .addParams("Token", config.getToken())
-                .addParams("Device", uniqueId)
-                .addParams("Typ", "2")
-                .build().execute(new Callback<LoginAuthUserOKModel>() {
-            @Override
-            public void onError(Call call, Exception e, int id) {
-                Log.i("APP", "服务器返回信息!!!!!!!!!!" + e.getMessage());
-                button.setVisibility(View.VISIBLE);
-                textView3.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onResponse(LoginAuthUserOKModel response, int id) {
-                if (response.getGuidAuth() == null || response.getGuidAuth().equals("")) {
-                    //如果没有登陆过,跳转登陆界面.
-                    Intent intent = new Intent(context, LoginActivity.class);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    //是否已经登陆过,如果登陆过.直接登陆
-                    finalConfig.setToken(response.getGuidAuth());
-                    liteOrm.save(finalConfig);
-
-                    SignalrService.model = response;
-
-                    Intent startIntent = new Intent(context, SignalrService.class);
-                    startService(startIntent);
-                    bindService(new Intent(context, SignalrService.class), conn,
-                            BIND_AUTO_CREATE);
-                }
-            }
-        });
     }
 }

@@ -12,5 +12,5 @@
     "pnacl-ld-name": "ld.nexe", 
     "pnacl-llc-name": "pnacl-llc.nexe", 
     "pnacl-sz-name": "pnacl-sz.nexe", 
-    "pnacl-version": "a7d51fd7c7f49132b511c423096b9904d16cdb4a"
+    "pnacl-version": "5dfe030a71ca66e72c5719ef5034c2ed24706c43"
 }

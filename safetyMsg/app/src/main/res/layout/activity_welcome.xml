@@ -22,7 +22,7 @@
         android:id="@+id/textView3" />
 
     <Button
-        android:text="服务不可用"
+        android:text="重试"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textView3"

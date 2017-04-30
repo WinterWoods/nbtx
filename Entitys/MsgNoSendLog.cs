@@ -19,5 +19,15 @@ namespace Entitys
         /// </summary>
         [SZColumn(MaxLength = 32)]
         public string SendKey { get; set; }
+        /// <summary>
+        /// 1为pc,2为手机
+        /// </summary>
+        [SZColumn(MaxLength = 1)]
+        public string Type { get; set; }
+    }
+    public class MsgPhoneReadSend : Basic
+    {
+        public string MsgKey { get; set; }
+        public string SendKey { get; set; }
     }
 }

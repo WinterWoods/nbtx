@@ -17,6 +17,11 @@
         <attr name="shadow_right" format="reference"/>
         <attr name="shadow_bottom" format="reference"/>
     </declare-styleable>
+    <declare-styleable name="SelectorImageView">
+        <!--创建自定义属性-->
+        <attr name="pressBackground" format="reference" />
+        <attr name="normalBackground" format="reference" />
+    </declare-styleable>
 
     <attr name="SwipeBackLayoutStyle" format="reference"/>
 </resources>

@@ -1,10 +1,15 @@
 package com.syd.safetymsg.Models.HttpsApi;
 
+import com.litesuits.orm.db.annotation.PrimaryKey;
+import com.litesuits.orm.db.enums.AssignType;
+
 /**
  * Created by east on 2017/4/21.
  */
 
 public class FileAuthServiceModel {
+    @PrimaryKey(AssignType.AUTO_INCREMENT)
+    private int id;
     private String ServicePort;
 
     public String getServicePort() {

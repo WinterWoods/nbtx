@@ -37,27 +37,25 @@ public class Utils {
         cal.set(Calendar.MILLISECOND, 0);
         return (int) (cal.getTimeInMillis()/1000);
     }
-    public static int getTimesnow() {
+    public static int getTimesnow(Date date) {
         Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
         return (int) (cal.getTimeInMillis()/1000);
     }
     public static String dateFormat(Date date){
-        Calendar calendar=Calendar.getInstance();
-       int dataCal=  (int) (calendar.getTimeInMillis()/1000);
-        calendar.setTime(date);
-        if(dataCal-getTimesmorning()>0) {
+        if(getTimesnow(date)-getTimesmorning()>0) {
             //今天只显示时间 HH:mm
             DateFormat df = new SimpleDateFormat("HH:mm");
             return df.format(date);
         }
-        else if(dataCal-getTimesmorning()<0&&dataCal-getTimesnowyear()>0) {
+        else if(getTimesnow(date)-getTimesmorning()<0&&getTimesnow(date)-getTimesnowyear()>0) {
             //昨天,并在今年以上显示MM-dd HH:mm
-            DateFormat df = new SimpleDateFormat("MM-dd HH:mm");
+            DateFormat df = new SimpleDateFormat("M月dd日");
             return df.format(date);
         }
-        else if(dataCal-getTimesnowyear()<0){
+        else if(getTimesnow(date)-getTimesnowyear()<0){
             //yy-MM-dd HH:mm:ss
-            DateFormat df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+            DateFormat df = new SimpleDateFormat("yyyy/M/dd");
             return df.format(date);
         }
         return  "";

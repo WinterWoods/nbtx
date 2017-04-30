@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="horizontal"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:padding="10dp"
+android:layout_alignParentRight="true"
+android:gravity="right">
+<TextView
+    android:id="@+id/tv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:layout_marginRight="8dp"
+    android:maxWidth="@dimen/message_send_chat_width"
+    android:background="@drawable/im_chatto_bg_normal"
+    android:paddingLeft="@dimen/message_send_chat_padding_left_right"
+    android:paddingRight="@dimen/message_send_chat_padding_left_right"
+    android:paddingTop="@dimen/message_send_chat_padding_top_bottom"
+    android:paddingBottom="@dimen/message_send_chat_padding_top_bottom"
+    android:textSize="@dimen/message_send_chat_font_size"
+    android:text="111"
+    android:gravity="center_vertical"
+    android:textColor="#FFFFFF" />
+<ImageView
+    android:id="@+id/titleImageView"
+    android:scaleType="centerCrop"
+    android:layout_width="45dp"
+    android:layout_height="45dp"
+    android:layout_alignParentRight="true"
+    android:layout_centerVertical="true"/>
+</LinearLayout>

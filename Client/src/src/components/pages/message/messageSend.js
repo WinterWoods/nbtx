@@ -16,7 +16,7 @@ import ModalPanel from './modalPanel.js'
 import GroupSetting from './groupSetting.js';
 import Brief from './brief.js';
 import GroupMsgReadList from './groupMsgReadList.js';
-
+import FaceList from "../../mod/util/faceList.js";
 
 export default class MessageSend extends Component {
     constructor(props) {
@@ -58,7 +58,7 @@ export default class MessageSend extends Component {
     componentDidMount() {
         var self = this;
         console.log("准备执行componentDidMount");
-        this.reloadMsg(this.props.oftenInfo);
+        this.reloadMsg(this.props.oftenInfo,this.props.noReadMessageCount);
 
         this.reloadGroupInfo(this.props.oftenInfo);
         window.clientHub.msgReadedList = function (result) {
@@ -151,7 +151,7 @@ export default class MessageSend extends Component {
                 self.setState({ groupAllUser: self.state.groupAllUser });
             });
     }
-    reloadMsg(oftenInfo) {
+    reloadMsg(oftenInfo,noReadMessageCount) {
         var self = this;
         //获取过去消息列表
         self.setState({ msgNotHaveMore: false, msgLoading: true, msgLoadMore: false });
@@ -165,7 +165,7 @@ export default class MessageSend extends Component {
                 });
         }
         var timestamp = new Date().getTime();
-        window.msgManager.messageList({ SendKey: oftenInfo.FriendKey, Type: oftenInfo.Type, PageSize: this.PageSize, RandomString: timestamp })
+        window.msgManager.messageList({ SendKey: oftenInfo.FriendKey, Type: oftenInfo.Type, PageSize:noReadMessageCount!=null&&noReadMessageCount!=0?noReadMessageCount:this.PageSize, RandomString: timestamp })
             .done(result1 => {
                 //如果不是上次请求直接丢掉
                 if (result1.RandomString != timestamp) {
@@ -204,7 +204,7 @@ export default class MessageSend extends Component {
 
         //接受到新的数据处理
         var self = this;
-
+        console.log("!!!!!!!!!!!!!!000000000", nextProps.newMessage);
         if (nextProps.newMessage && this.props.newMessage != nextProps.newMessage) {
 
             //判断滚动条是否在底部。
@@ -214,6 +214,7 @@ export default class MessageSend extends Component {
             }
             //接收到新的消息，如果是撤销的话就讲原来的消息替换为新的撤销消息
             var msgList = self.state.messageListResult;
+            console.log("!!!!!!!!!!!!!!111111111", nextProps.newMessage);
             if (nextProps.newMessage.MsgType == "9") {
                 for (var i = 0; i < msgList.length; i++) {
                     if (msgList[i].Key == nextProps.newMessage.Key) {
@@ -232,7 +233,7 @@ export default class MessageSend extends Component {
         }
         if (this.props.oftenInfo != nextProps.oftenInfo) {
             self.setState({ messageListResult: [], userInfo: {}, groupInfo: {} });
-            this.reloadMsg(nextProps.oftenInfo);
+            this.reloadMsg(nextProps.oftenInfo,this.props.noReadMessageCount);
             this.reloadGroupInfo(nextProps.oftenInfo);
             //将草稿信息回传给上一层,并记录
             this.props.draftMsg(this.props.oftenInfo.Key, this.state.message);
@@ -523,8 +524,8 @@ export default class MessageSend extends Component {
     formatContextStr(content) {
         var p = /\[.*?\]/g;
         var htmlContent = content.replace(p, function (value) {
-            var src = value.replace('[', '').replace(']', '')
-            return '<img src="img/' + src + '.png" class="messageContextFace" title="[' + src + ']" />';
+            var src = FaceList.getFile(value);
+            return '<img src="img/' + src.file + '.png" class="messageContextFace" title="' + src.text + '" />';
         });
         return (<div dangerouslySetInnerHTML={{ __html: htmlContent }}></div>);
 
@@ -535,7 +536,7 @@ export default class MessageSend extends Component {
     //发送表情
     faceHandleSelect(item) {
         var self = this;
-        self.setState({ message: self.state.message + '[' + item + ']', sendbtn: true });
+        self.setState({ message: self.state.message + item.text, sendbtn: true });
     }
     renderMessageNoMy(item) {
         return (<div className="noMyMessage">
@@ -558,6 +559,7 @@ export default class MessageSend extends Component {
         );
     }
     renderMessageOne(item) {
+        console.log("2323423424", item);
         //别人的信息 
         if (item.SendKey != window.LoginUser.Key) {
             if (item.FileUpOver == false) return "";
@@ -888,7 +890,7 @@ export default class MessageSend extends Component {
                         this.reloadGroupInfo({ FriendKey: key });
 
                     }.bind(this)}
-                    />
+                />
             </ModalPanel>);
             groupBrief = (<ModalPanel title="群公告" closePanel={this.handlCloseGroupBrief.bind(this)} visible={this.state.groupBriefVisible}>
                 <Brief groupInfo={this.state.groupInfo}
@@ -897,7 +899,7 @@ export default class MessageSend extends Component {
                     reloadGroupInfo={function (key, name) {
                         this.reloadGroupInfo({ FriendKey: key });
                     }.bind(this)}
-                    />
+                />
             </ModalPanel>);
 
             //群聊,用来查看未读人员
@@ -910,7 +912,7 @@ export default class MessageSend extends Component {
                 closePanel={function () {
                     this.setState({ groupMsgReadListVisible: false });
                 }.bind(this)}
-                />
+            />
 
         }
         //根据类型不一样生成不一样抬头
@@ -932,7 +934,7 @@ export default class MessageSend extends Component {
             onDrop={this.dropHandle.bind(this)}
             onDragenter={this.dragenterHandle.bind(this)}
             onDragover={this.dragoverHandle.bind(this)}
-            >
+        >
             <div className="messageTitle">
                 <div className="left">
                     <HeadImg type={this.props.oftenInfo.Type} className={this.props.oftenInfo.Type == "2" ? "img groupimg" : "img"} userKey={this.props.oftenInfo.FriendKey} />
@@ -968,7 +970,7 @@ export default class MessageSend extends Component {
                         value={this.state.message}
                         onPaste={this.pasteHandle.bind(this)}
                         onChange={this.handleChange.bind(this)}
-                        />
+                    />
                 </div>
                 <div className="messageSendBtn">
                     <Button className="SendBtn" type="ghost" onClick={this.sendMessage.bind(this)} disabled={!this.state.sendbtn} >发送</Button>
@@ -982,7 +984,7 @@ export default class MessageSend extends Component {
                 onCancel={this.handleFileModelCancel.bind(this)}
                 okText="发送" cancelText="取消"
                 width={400}
-                >
+            >
                 <div className="sendFileModalPanel">
                     <div className="img"><img ref="sendFileImg" src={this.state.sendFileSrc} /></div>
                     <div className="content">
@@ -1015,5 +1017,6 @@ MessageSend.propTypes = {};
 MessageSend.defaultProps = {
     oftenInfo: {},
     newMessage: {},
+    noReadMessageCount:0,
     draftMsg: function (key, value) { }
 };

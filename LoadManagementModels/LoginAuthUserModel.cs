@@ -55,10 +55,6 @@ namespace LoadManagementModels
         /// </summary>
         public string ConnServicePort { get; set; }
         /// <summary>
-        /// 用户key
-        /// </summary>
-        public string Key { get; set; }
-        /// <summary>
         /// 用户授权码
         /// </summary>
         public string GuidAuth { get; set; }

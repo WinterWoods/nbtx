@@ -16,28 +16,25 @@ namespace MessageManager
     /// </summary>
     public class AuthorizationUserManager
     {
+        static object loakObject = new object();
         static IHubContext context = GlobalHost.ConnectionManager.GetHubContext<UserManager>();
         private static List<AuthServiceModel> authUserList = new List<AuthServiceModel>();
         public static void AuthUserAdd(AuthServiceModel model)
         {
             //将授权的用户记录下来,如果已经存在则干掉之前的,添加新的.
-            if (authUserList.Any(a => a.Key == model.Key))
+            lock (loakObject)
             {
-                authUserList.RemoveAll(r => r.Key == model.Key);
+                string key = model.Key + model.Type;
+                if (authUserList.Any(a => a.GuidAuth == model.GuidAuth))
+                {
+                    authUserList.RemoveAll(r => r.GuidAuth == model.GuidAuth);
+                }
+                authUserList.Add(model);
             }
-            authUserList.Add(model);
-            //using (DB db = new DB())
-            //{
-            //    var user = db.UserInfo.Find(model.Key);
-            //    if (user != null && !string.IsNullOrEmpty(user.HubId))
-            //    {
-            //        context.Clients.Client(user.HubId).reLogin();
-            //    }
-            //}
         }
         public static AuthServiceModel GetAuthUser(string Key)
         {
-            return authUserList.First(f => f.Key == Key);
+            return authUserList.First(f => f.GuidAuth == Key);
         }
     }
 }

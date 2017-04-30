@@ -1,7 +1,9 @@
 
 package com.syd.swipebacklayout.lib.app;
 
+import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
@@ -9,7 +11,7 @@ import com.syd.swipebacklayout.lib.SwipeBackLayout;
 import com.syd.swipebacklayout.lib.Utils;
 
 
-public class SwipeBackActivity extends AppCompatActivity implements SwipeBackActivityBase {
+public class SwipeBackActivity extends FragmentActivity implements SwipeBackActivityBase {
     private SwipeBackActivityHelper mHelper;
 
     @Override

@@ -24,7 +24,7 @@ import com.syd.safetymsg.Models.sqlite.ConfigModel;
 import okhttp3.Call;
 import okhttp3.Request;
 
-public class LoginActivity extends  Activity implements View.OnClickListener,SignalrService.Callback {
+public class LoginActivity extends  Activity implements View.OnClickListener,SignalrService.SignInCallbak {
     private String TAG = getClass().getName();
     private Handler handler;
     private Context context;
@@ -56,13 +56,13 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
         et_name = (EditText) findViewById(R.id.editText_name);
         et_password = (EditText) findViewById(R.id.editText_password);
     }
-    public class MyServiceConn implements ServiceConnection {
+    class MyServiceConn implements ServiceConnection {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((SignalrService.MyBinder) binder).getService();
             //将当前activity添加到接口集合中
-            service.setCallback(LoginActivity.this);
+            service.setSignInCallback(LoginActivity.this);
         }
 
         @Override
@@ -98,35 +98,30 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
 
             @Override
             public void onAfter(int id) {
-                button.setText("登陆");
-                button.setEnabled(true);
+
             }
 
             @Override
             public void onError(Call call, Exception e, int id) {
                 ToastUtil.showShort(context, e.getMessage());
+                button.setText("登陆");
+                button.setEnabled(true);
             }
 
             @Override
             public void onResponse(LoginAuthUserOKModel response, int id) {
-                ConfigModel config = liteOrm.queryById(1, ConfigModel.class);
-                if (config != null) {
-                    config.setToken(response.getGuidAuth());
-                    liteOrm.save(config);
-                }
-                Log.i(TAG, "正确-->" + response.getConnServiceIP() + response.getConnServicePort());
+                liteOrm.deleteDatabase();
+                liteOrm.openOrCreateDatabase();
+                ConfigModel config = new ConfigModel();
+                config.setToken(response.getGuidAuth());
+                config.setInit(false);
+                liteOrm.save(config);
                 SignalrService.model = response;
-//                SignalrService.model.setConnServiceIP("172.16.42.247");
-//                SignalrService.model.setConnServicePort("10158");
 
                 Intent startIntent = new Intent(context, SignalrService.class);
                 startService(startIntent);
                 bindService(new Intent(context, SignalrService.class), conn,
                         BIND_AUTO_CREATE);
-//                //登陆成功,需要连接signalR,并跳转
-//                Intent intent=new Intent(context,MainActivity.class);
-//                startActivity(intent);
-//                finish();
             }
         });
     }
@@ -147,27 +142,23 @@ public class LoginActivity extends  Activity implements View.OnClickListener,Sig
     }
 
     @Override
-    public void error() {
-        ToastUtil.showShort(this,"连接服务器出错");
+    public void error(String err) {
+        ToastUtil.showShort(this,err);
     }
 
     @Override
-    public void connected() {
-
-    }
-
-    @Override
-    public void closed() {
+    public void reLogin() {
 
     }
 
     @Override
-    public void successed(UserInfo userInfo) {
+    public void initMain() {
         //登陆成功,需要连接signalR,并跳转
         Intent intent = new Intent(context, MainActivity.class);
         startActivity(intent);
         finish();
     }
+
     @Override
     protected void onDestroy() {
         // TODO Auto-generated method stub

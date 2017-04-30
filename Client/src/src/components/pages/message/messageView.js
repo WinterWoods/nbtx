@@ -21,7 +21,8 @@ export default class messageView extends Component {
             reload: true,
             activeKey: this.defaultActiveKey,
             newMessage: {},
-            showMessageInfo: null
+            showMessageInfo: null,
+            noReadMessageCount:0
         };
 
     }
@@ -34,21 +35,41 @@ export default class messageView extends Component {
             //如果找到原来的,则将原来的数字加1并放在最前边
             var oldOften = null;
             for (var i = 0; i < window.oftens.length; i++) {
-                if (resultMsg.Type == "1") {
-                    if (window.oftens[i].FriendKey == resultMsg.SendKey) {
-                        oldOften = window.oftens[i];
-                        window.oftens.splice(i, 1);
-                        break;
+                if (resultMsg.SendKey == window.LoginUser.Key) {
+                    if (resultMsg.Type == "1") {
+                        if (window.oftens[i].FriendKey == resultMsg.FriendKey) {
+                            oldOften = window.oftens[i];
+                            window.oftens.splice(i, 1);
+                            break;
+                        }
+                    }
+                    else {
+                        //如果是群消息必须用接收者去判断.
+                        if (window.oftens[i].FriendKey == resultMsg.ReceivedKey) {
+                            oldOften = window.oftens[i];
+                            window.oftens.splice(i, 1);
+                            break;
+                        }
                     }
                 }
                 else {
-                    //如果是群消息必须用接收者去判断.
-                    if (window.oftens[i].FriendKey == resultMsg.ReceivedKey) {
-                        oldOften = window.oftens[i];
-                        window.oftens.splice(i, 1);
-                        break;
+                    if (resultMsg.Type == "1") {
+                        if (window.oftens[i].FriendKey == resultMsg.SendKey) {
+                            oldOften = window.oftens[i];
+                            window.oftens.splice(i, 1);
+                            break;
+                        }
+                    }
+                    else {
+                        //如果是群消息必须用接收者去判断.
+                        if (window.oftens[i].FriendKey == resultMsg.ReceivedKey) {
+                            oldOften = window.oftens[i];
+                            window.oftens.splice(i, 1);
+                            break;
+                        }
                     }
                 }
+
             }
             if (oldOften != null) {
                 if (self.state.activeKey != oldOften.Key) {
@@ -71,30 +92,37 @@ export default class messageView extends Component {
                 Util.newMessage(resultMsg);
             }
             else {
-                //先进行添加.然后在添加
-                if (resultMsg.Type == "1") {
-                    console.log("!!!!!!!!!!!!",oldOften);
-                    window.msgManager.myOftenListAdd({ FriendKey: resultMsg.SendKey, Type: resultMsg.Type, LastMsgContext: resultMsg.Context })
-                        .done(function (result) {
-                            result.MessageCount++;
-                            result.LastMsgContext = resultMsg.Context;
-                            window.oftens.splice(0, 0, result);
-                            resultMsg.Name = result.FriendName;
-                            Util.newMessage(resultMsg);
-                            self.setState({ newMessage: resultMsg });
-                        });
+                if (resultMsg.SendKey != window.LoginUser.Key) {
+                    //先进行添加.然后在添加
+                    if (resultMsg.Type == "1") {
+                        console.log("!!!!!!!!!!!!", oldOften);
+                        window.msgManager.myOftenListAdd({ FriendKey: resultMsg.SendKey, Type: resultMsg.Type, LastMsgContext: resultMsg.Context })
+                            .done(function (result) {
+                                result.MessageCount++;
+                                result.LastMsgContext = resultMsg.Context;
+                                window.oftens.splice(0, 0, result);
+                                resultMsg.Name = result.FriendName;
+                                Util.newMessage(resultMsg);
+                                self.setState({ newMessage: resultMsg });
+                            });
+                    }
+                    else {
+                        window.msgManager.myOftenListAdd({ FriendKey: resultMsg.ReceivedKey, Type: resultMsg.Type, LastMsgContext: resultMsg.Context })
+                            .done(function (result) {
+                                result.MessageCount++;
+                                result.LastMsgContext = resultMsg.SendName + "：" + resultMsg.Context;
+                                window.oftens.splice(0, 0, result);
+                                resultMsg.Name = result.FriendName;
+                                Util.newMessage(resultMsg);
+                                self.setState({ newMessage: resultMsg });
+                            });
+                    }
                 }
                 else {
-                    window.msgManager.myOftenListAdd({ FriendKey: resultMsg.ReceivedKey, Type: resultMsg.Type, LastMsgContext: resultMsg.Context })
-                        .done(function (result) {
-                            result.MessageCount++;
-                            result.LastMsgContext = resultMsg.SendName + "：" + resultMsg.Context;
-                            window.oftens.splice(0, 0, result);
-                            resultMsg.Name = result.FriendName;
-                            Util.newMessage(resultMsg);
-                            self.setState({ newMessage: resultMsg });
-                        });
+                    console.log("!!!!!!!!!!!!!!!!!!!!", resultMsg)
+                    self.setState({ newMessage: resultMsg });
                 }
+
             }
         };
 
@@ -163,7 +191,7 @@ export default class messageView extends Component {
         }
         window.appThis.setState({ havNewMessage: false, selectedKey: window.defaultSelectedKey });
         console.log("!获取我所有未读的消息");
-        window.msgManager.noSendMsgGet();
+        window.msgManager.noSendMsgGet({ Type: "1" });
         window.isFirst = false;
 
     }
@@ -259,9 +287,10 @@ export default class messageView extends Component {
         else {
             for (var i = 0; i < window.oftens.length; i++) {
                 if (window.oftens[i].Key == item.Key) {
+                    var noReadMessageCount=window.oftens[i].MessageCount;
                     window.oftens[i].MessageCount = 0;
                     window.oftens[i].draft = "";
-                    self.setState({ activeKey: item.Key, showMessageInfo: window.oftens[i] });
+                    self.setState({ activeKey: item.Key, showMessageInfo: window.oftens[i],noReadMessageCount: noReadMessageCount});
 
                     break;
                 }
@@ -272,6 +301,9 @@ export default class messageView extends Component {
     }
     newMessageBind(item) {
         if (this.state.newMessage.Type == "1") {
+            if (this.state.newMessage.SendKey == window.LoginUser.Key && this.state.newMessage.ReceivedKey == item.FriendKey) {
+                return this.state.newMessage;
+            }
             if (this.state.newMessage.SendKey == item.FriendKey) {
                 return this.state.newMessage;
             }
@@ -343,7 +375,8 @@ export default class messageView extends Component {
                         oftenInfo={this.state.showMessageInfo}
                         newMessage={this.newMessageBind(this.state.showMessageInfo)}
                         draftMsg={this.draftMsgSave.bind(this)}
-                        /> :
+                        noReadMessageCount={this.state.noReadMessageCount}
+                    /> :
                     <Welcome />
                 }
             </div>

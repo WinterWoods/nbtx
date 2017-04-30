@@ -13,9 +13,9 @@ namespace FileManager
     {
         static Color[] list = { Color.FromArgb(23, 194, 149), Color.FromArgb(77, 169, 235), Color.FromArgb(242, 114, 94), Color.FromArgb(247, 181, 94), Color.FromArgb(179, 137, 121), Color.FromArgb(86, 138, 173), Color.FromArgb(138, 138, 138) };
         static Random rnd = new Random();
-        static int width = 200;
-        static int height = 200;
-        static int fontSize = 60;
+        static int width = 100;
+        static int height = 100;
+        static int fontSize = 30;
         public static void Create(string str, string path)
         {
             if (str == null || str.Trim() == String.Empty)
@@ -49,7 +49,7 @@ namespace FileManager
                 SolidBrush brush = new SolidBrush(Color.White);
                 //System.Drawing.Drawing2D.LinearGradientBrush brush = new System.Drawing.Drawing2D.LinearGradientBrush(new Rectangle(0, 0, image.Width, image.Height), Color.White, Color.White, 1.2f, true);
                 int fontSizeZhen = (fontSize + fontSize / 3);
-                g.DrawString(s, font, brush, (width- fontSizeZhen * 2 - fontSizeZhen / 4) /2, (height- fontSizeZhen)/3);//文本 字体 颜色 起始位置x 起始位置y
+                g.DrawString(s, font, brush, (width- fontSizeZhen * 2 - fontSizeZhen / 3) /2, (height- fontSizeZhen)/5*2);//文本 字体 颜色 起始位置x 起始位置y
 
                 //画图片的边框线
                 //g.DrawRectangle(new Pen(Color.Silver), 0, 0, image.Width - 1, image.Height - 1);

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:layout_centerVertical="true"
+    android:layout_centerHorizontal="true"
+    android:layout_centerInParent="true"
+    android:background="@color/message_send_top_background">
+
+    <ImageView
+        android:id="@+id/message_send_back"
+        android:layout_width="@dimen/title_layout_head_ico_width_height"
+        android:layout_height="@dimen/title_layout_head_ico_width_height"
+        android:layout_gravity="center_horizontal"
+        android:scaleType="center"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/actionbar_home_indicator_blue"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:id="@+id/textView_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:text=""
+        android:textSize="@dimen/message_send_top_font"
+        android:textColor="@color/message_send_top_font" />
+
+    <ImageView
+        android:id="@+id/message_send_userinfo"
+        android:layout_width="@dimen/title_layout_head_ico_width_height"
+        android:layout_height="@dimen/title_layout_head_ico_width_height"
+        android:scaleType="center"
+        android:src="@drawable/ic_act_o2o_conv_setting"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
+
+    <View  android:layout_height="1px"
+        android:layout_width="match_parent"
+        android:background="@color/home_bottom_top_line"
+        android:layout_alignParentBottom="true"
+        />
+</RelativeLayout>

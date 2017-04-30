@@ -1,13 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_message_send"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.syd.safetymsg.MessageSendActivity">
+    android:orientation="vertical"
 
-</RelativeLayout>
+    xmlns:cs="http://schemas.android.com/apk/res-auto" >
+    <!--1. 顶部标题栏-->
+    <include
+        android:id="@+id/show_main_title"
+        layout="@layout/title_layout_message_send" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recylerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/message_send_list_background"/>
+    <View  android:layout_height="1px"
+        android:id="@+id/view_line"
+        android:layout_width="match_parent"
+        android:background="@color/home_bottom_top_line"
+        android:layout_alignParentBottom="true"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/message_send_edit_text_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageView
+            android:id="@+id/imageview_ib_face"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:scaleType="center"
+            android:clickable="true"
+            android:src="@drawable/ib_face_normal"/>
+        <com.syd.szui.BackEditText
+            android:id="@+id/et"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textCursorDrawable="@null"
+            android:gravity="left|top"
+            android:hint="@string/message_send_input_share_content"
+            android:textColor="@color/message_send_edit_text_color"
+            android:minLines="1"
+            android:background="@color/message_send_edit_text_background"
+            android:textSize="@dimen/message_send_edit_text_font_size" />
+        <Button
+            android:id="@+id/btn_send"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:textSize="16dp"
+            android:textColor="@color/message_send_send_button_color"
+            android:text="发送"
+            android:background="@null"
+            android:visibility="gone"
+            />
+        <com.syd.szui.SelectorImageView
+            android:id="@+id/tv_send_other"
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+            android:scaleType="center"
+            android:clickable="true"
+    cs:pressBackground="@drawable/ic_actbar_search"
+    cs:normalBackground="@drawable/chat_btn_add_normal" />
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/message_send_bottom_frame"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:visibility="gone"></FrameLayout>
+</LinearLayout>

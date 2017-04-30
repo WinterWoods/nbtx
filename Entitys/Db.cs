@@ -40,6 +40,10 @@ namespace Entitys
         /// </summary>
         public DbSet<MsgNoSendLog> MsgNoSendLog { get; set; }
         /// <summary>
+        /// 所有已读消息暂存,用于手机端同步
+        /// </summary>
+        public DbSet<MsgPhoneReadSend> MsgPhoneReadSend { get; set; }
+        /// <summary>
         /// 消息记录列表
         /// </summary>
         public DbSet<MsgInfo> MsgInfo { get; set; }

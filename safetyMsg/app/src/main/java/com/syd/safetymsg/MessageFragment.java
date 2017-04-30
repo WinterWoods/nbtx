@@ -35,6 +35,8 @@ import com.daimajia.swipe.SimpleSwipeListener;
 import com.daimajia.swipe.SwipeLayout;
 import com.daimajia.swipe.adapters.BaseSwipeAdapter;
 import com.google.gson.JsonElement;
+import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.log.OrmLog;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.syd.safetymsg.Models.HttpsApi.MsgModel;
@@ -52,6 +54,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import microsoft.aspnet.signalr.client.Action;
+import microsoft.aspnet.signalr.client.ErrorCallback;
 import microsoft.aspnet.signalr.client.SignalRFuture;
 
 import static android.content.Context.BIND_AUTO_CREATE;
@@ -60,22 +63,70 @@ import static android.content.Context.BIND_AUTO_CREATE;
  * Created by 78967 on 2017/2/15.
  */
 
-public class MessageFragment extends Fragment implements SignalrService.clientCallback {
+public class MessageFragment extends Fragment implements SignalrService.ClientCallback, SignalrService.Callback {
     private String TAG = getClass().getName();
     private ListView mListView;
     private MessageListViewAdapter mTitleAdapter;
-    private List<OftenList> mOftenList;
+    private List<OftenList> mOftenList=new ArrayList<>();
     private Handler handler;
 
     private  View lLoadingView;
     private MainActivity mainActivity;
+    private Context context;
+
+    private TextView no_conn_ser;
+
     public MessageFragment(MainActivity activity){
         mainActivity=activity;
-        mainActivity.ClientCallback=MessageFragment.this;
+        mainActivity.service.addClientCallback(this);
+        mainActivity.Callback=MessageFragment.this;
+    }
+    private final int SERVICE_CLOSED=0;
+    private final int SERVICE_CONNECTED=1;
+    //刷新列表
+    private final int RE_VIEW_OFTEN_LIST=3;
+    //接受线程消息
+    private void handlerEvent(){
+        //handler与线程之间的通信及数据处理
+        handler = new Handler() {
+            public void handleMessage(Message msg) {
+                if (msg.what == SERVICE_CLOSED) {
+                    no_conn_ser.setVisibility(View.VISIBLE);
+                    //mPullToRefreshView.setRefreshing(false);
+
+                }
+                if (msg.what == SERVICE_CONNECTED) {
+                    //mPullToRefreshView.setRefreshing(false);
+                    no_conn_ser.setVisibility(View.GONE);
+                    LoadData();
+                }
+                if (msg.what == RE_VIEW_OFTEN_LIST) {
+                    mListView.setVisibility(View.VISIBLE);
+                    lLoadingView.setVisibility(View.GONE);
+                    mTitleAdapter.notifyDataSetChanged();
+                }
+            }
+        };
+    }
+    @Override
+    public void closed() {
+        //当没有连接服务器的时候
+        Message message=new Message();
+        message.what=SERVICE_CLOSED;
+        handler.sendMessage(message);
+
     }
 
-    PullToRefreshView mPullToRefreshView;
-    public static final int REFRESH_DELAY = 2000;
+    @Override
+    public void connected() {
+        //连接成功
+        Message message=new Message();
+        message.what=SERVICE_CONNECTED;
+        handler.sendMessage(message);
+
+    }
+//    PullToRefreshView mPullToRefreshView;
+//    public static final int REFRESH_DELAY = 2000;
 
     AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
@@ -87,6 +138,7 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
                 if (title != null) {
                     Log.i(TAG,title);
                     Intent intent=new Intent(((MainActivity) getActivity()), MessageSendActivity.class);
+                    intent.putExtra("often",titleData);
                     startActivity(intent);
                 }
             }
@@ -103,6 +155,7 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.message_fg, container, false);
+        context=getContext();
         mOftenList=new ArrayList<OftenList>();
         mListView = (ListView) view.findViewById(R.id.listView);
         mTitleAdapter = new MessageListViewAdapter();
@@ -111,59 +164,37 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
         mListView.setOnItemLongClickListener(mLongClickListener);
         //绑定加载中等组件
         lLoadingView=view.findViewById(R.id.layout_loading);
-        mPullToRefreshView = (PullToRefreshView) view.findViewById(R.id.pull_to_refresh);
-        mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                LoadData();
-                mPullToRefreshView.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPullToRefreshView.setRefreshing(false);
-                    }
-                }, REFRESH_DELAY);
-            }
-        });
+        no_conn_ser=(TextView)view.findViewById(R.id.no_conn_ser);
+//        mPullToRefreshView = (PullToRefreshView) view.findViewById(R.id.pull_to_refresh);
+//        mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
+//            @Override
+//            public void onRefresh() {
+//                LoadData();
+//                mPullToRefreshView.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mPullToRefreshView.setRefreshing(false);
+//                    }
+//                }, REFRESH_DELAY);
+//            }
+//        });
         handlerEvent();
+        mListView.setVisibility(View.GONE);
+        lLoadingView.setVisibility(View.VISIBLE);
         LoadData();
         return view;
     }
-    //接受线程消息
-    private void handlerEvent(){
-        //handler与线程之间的通信及数据处理
-        handler = new Handler() {
-            public void handleMessage(Message msg) {
-                if (msg.what == 0) {
-                    mPullToRefreshView.setRefreshing(false);
-                    mListView.setVisibility(View.VISIBLE);
-                    lLoadingView.setVisibility(View.GONE);
-                    mTitleAdapter.notifyDataSetChanged();
-                }
-                if (msg.what == 1) {
-                    mTitleAdapter.notifyDataSetChanged();
-                }
-            }
-        };
-    }
+
     private  void  LoadData() {
-        //将页面显示为加载中
-        mListView.setVisibility(View.GONE);
-        lLoadingView.setVisibility(View.VISIBLE);
-        //开一条子线程加载网络数据
-        mainActivity.service.sendMsg(OftenList[].class,"myOftenList", new SignalrService.sendCallback<OftenList[]>() {
-            @Override
-            public void successed(OftenList[] obj) {
-                mOftenList.clear();
-                for(OftenList often:obj){
-                    Log.i(TAG,often.getUserKey());
-                    mOftenList.add(often);
-                }
-                Message msg = new Message();
-                msg.what = 0;
-                handler.sendMessage(msg);
-            }
-        });
+        List<OftenList> list = ThisApplication.getInstance().liteOrm.query(new QueryBuilder<OftenList>(OftenList.class));
+        mOftenList.clear();
+        mOftenList.addAll(list);
+        Message Message = new Message();
+        Message.what = RE_VIEW_OFTEN_LIST;
+        handler.sendMessage(Message);
     }
+
+
 
 
     class MessageListViewAdapter extends BaseSwipeAdapter {
@@ -213,6 +244,7 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
                 viewHolder.mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
                 viewHolder.mMessageTextView = (TextView) view.findViewById(R.id.messageTextView);
                 viewHolder.mTimeTextView = (TextView) view.findViewById(R.id.timeTextView);
+                viewHolder.mOtherTextView=(TextView)view.findViewById(R.id.otherTextView) ;
                 view.setTag(viewHolder);
             }
 
@@ -227,11 +259,19 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
             viewHolder.mTitleTextView.setText(data.getFriendName());
 
             ImageLoader.getInstance().displayImage(CommHttp.getHeadPic(data.getFriendKey(), data.getType()), viewHolder.mTitleImageView);
-            viewHolder.mMessageTextView.setText(data.getLastMsgContext());
+
+            viewHolder.mMessageTextView.setText(SpanStringUtils.getEmotionContent(context,viewHolder.mMessageTextView,data.getLastMsgContext()));
             if (data.getLastTime() != null)
                 viewHolder.mTimeTextView.setText(Utils.dateFormat(data.getLastTime()));
             else
                 viewHolder.mTimeTextView.setText(Utils.dateFormat(data.getEditTime()));
+            if(data.getMessageCount()==0){
+                viewHolder.mOtherTextView.setVisibility(View.GONE);
+            }
+            else{
+                viewHolder.mOtherTextView.setVisibility(View.VISIBLE);
+                viewHolder.mOtherTextView.setText(data.getMessageCount()>99?"99+":data.getMessageCount()+"");
+            }
         }
 
         class ViewHolder {
@@ -239,6 +279,7 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
             protected TextView mTitleTextView;
             protected TextView mMessageTextView;
             protected  TextView mTimeTextView;
+            protected TextView mOtherTextView;
         }
     }
 
@@ -251,36 +292,26 @@ public class MessageFragment extends Fragment implements SignalrService.clientCa
     @Override
     public void sendMsg(MsgModel model) {
 
-        //便利列表是否存在,如果存在修改,如果不存在则添加一个
-        OftenList oldOften=null;
-        for (OftenList _often:mOftenList){
-            if(model.getType().equals("1")){
-                //如果是个人聊天
-                if(_often.getFriendKey().equals(model.getSendKey())) {
-                    //如果找到了
-                    oldOften=_often;
-                    break;
-                }
-            }
-            else{
-                //如果是群聊
-                if(_often.getFriendKey().equals(model.getReceivedKey())){
-                    //如果找到了
-                    oldOften=_often;
-                    break;
-                }
+    }
+
+    @Override
+    public void reLoadOftenList() {
+
+    }
+
+    @Override
+    public void editOftenInfo(OftenList often) {
+        //如果某一个发生变化,在这里进行修改,不用从新读取数据库
+        for (OftenList o:mOftenList){
+            if(o.getKey().equals(often.getKey()))
+            {
+                mOftenList.remove(o);
+                break;
             }
         }
-        if(oldOften!=null)
-        mOftenList.remove(oldOften);
-        oldOften.setLastMsgContext(model.getContext());
-        oldOften.setLastTime(model.getSendTime());
-        int newCount=oldOften.getMessageCount()+1;
-        oldOften.setMessageCount(newCount);
-        mOftenList.add(0,oldOften);
-        Message msg = new Message();
-        msg.what = 1;
-        msg.obj=oldOften;
-        handler.sendMessage(msg);
+        mOftenList.add(0,often);
+        Message Message = new Message();
+        Message.what = RE_VIEW_OFTEN_LIST;
+        handler.sendMessage(Message);
     }
 }

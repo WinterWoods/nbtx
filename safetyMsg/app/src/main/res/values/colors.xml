@@ -7,7 +7,18 @@
     <color name="home_bottom_font_highlight">#38ADFF</color>
     <color name="home_bottom_top_line">#D8D8D8</color>
     <color name="home_top_logo_font">#3AAEFF</color>
+    <color name="message_send_top_background">#F7F7F7</color>
+    <color name="message_send_top_font">#000000</color>
+    <color name="message_send_top_line">#DDD7D7</color>
+    <color name="message_send_edit_text_background">#F8F8F8</color>
+    <color name="white">#FFFFFF</color>
 
+    <color name="bg_horizontal_btn_normal">#eeeeee</color>
+    <color name="bg_horizontal_btn_selected">#70a3a4a7</color>
+    <color name="bg_edittext_color">#00000000</color>
+    <color name="bg_horizontal_line_color">#80a3a4a7</color>
+    <color name="bg_indicator_point_normal">#D8D8D8</color>
+    <color name="bg_indicator_point_selected">#A6A6A6</color>
 
     <color name="backgroundColor">#E8E8E0</color>
     <color name="backgroundColorPress">#DBDBD3</color>
@@ -18,4 +29,8 @@
     <color name="red_press">#990000</color>
     <color name="dark_gray">#4C535B</color>
     <color name="dark_gray_press">#ff7e8a97</color>
+    <color name="message_send_edit_text_color">#000000</color>
+    <color name="message_send_list_background">#EBEBEB</color>
+    <color name="message_send_send_button_color">#38ADFF</color>
+
 </resources>

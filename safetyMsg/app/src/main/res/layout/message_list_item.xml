@@ -10,7 +10,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="60dp"
         android:background="#FF5534"
         android:gravity="center"
         android:tag="Bottom3"
@@ -27,7 +27,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="5"
-            android:text="Delete Item?"
+            android:text="删除?"
             android:textColor="#fff"
             android:textSize="17sp" />
 
@@ -37,7 +37,7 @@
             android:layout_height="40dp"
             android:layout_weight="4"
             android:background="@drawable/white"
-            android:text="Yes,Delete"
+            android:text="删除!"
             android:textColor="#FF5534" />
     </LinearLayout>
 
@@ -59,39 +59,50 @@
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_marginRight="10dp"/>
+
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/titleTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18dp"/>
+                android:textSize="18dp" />
+
             <TextView
                 android:id="@+id/messageTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textSize="14dp"/>
+                android:textSize="14dp" />
         </LinearLayout>
+
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="60dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/timeTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:textSize="14dp"/>
+                android:textSize="12dp" />
+
             <TextView
                 android:id="@+id/otherTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14dp"/>
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/red_dot_bg"
+                android:textSize="10dp"
+                android:visibility="gone"
+                android:textColor="@color/white"/>
         </LinearLayout>
     </LinearLayout>
 </com.daimajia.swipe.SwipeLayout>

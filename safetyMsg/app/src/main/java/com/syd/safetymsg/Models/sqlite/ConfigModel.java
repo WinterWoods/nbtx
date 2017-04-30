@@ -21,4 +21,15 @@ public class ConfigModel {
     }
 
     private String Token;
+
+    public boolean isInit() {
+        return isInit;
+    }
+
+    public void setInit(boolean init) {
+        isInit = init;
+    }
+
+    private boolean isInit;
+
 }

@@ -18,16 +18,7 @@ namespace MessageManager.SignalR
     public class UserManager : Hub
     {
         IHubContext context = GlobalHost.ConnectionManager.GetHubContext<ClientManager>();
-        public override Task OnConnected()
-        {
-            StartClass.log.WriteInfo("一个新用户连接了进来.");
-            return base.OnConnected();
-        }
-        public override Task OnDisconnected(bool stopCalled)
-        {
-            StartClass.log.WriteInfo("一个用户断开了.");
-            return base.OnDisconnected(stopCalled);
-        }
+        
         /// <summary>
         /// 登陆系统
         /// </summary>
@@ -39,7 +30,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var authUser = AuthorizationUserManager.GetAuthUser(model.Key);
+                    var authUser = AuthorizationUserManager.GetAuthUser(model.GuidAuth);
                     if (authUser == null)
                     {
                         throw new Exception("获取授权错误,请重新登录.");
@@ -52,7 +43,7 @@ namespace MessageManager.SignalR
                     {
                         throw new Exception("授权码错误,请重新登录.");
                     }
-                    var user = db.UserInfo.Find(model.Key);
+                    var user = db.UserInfo.Find(authUser.Key);
                     if (user == null)
                     {
                         throw new Exception("没有查询到该用户");

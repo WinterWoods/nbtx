@@ -5,6 +5,7 @@ import com.litesuits.orm.LiteOrm;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.syd.common.data.DataKeeper;
 import com.syd.okhttp.OkHttpUtils;
 
 import okhttp3.OkHttpClient;
@@ -14,6 +15,7 @@ import okhttp3.OkHttpClient;
  */
 
 public class ThisApplication extends Application {
+    public DataKeeper dataKeeper;
     public LiteOrm liteOrm;
     public static ThisApplication instance;
     public void onCreate() {
@@ -41,8 +43,11 @@ public class ThisApplication extends Application {
                 .defaultDisplayImageOptions(options)
                 .build();
         ImageLoader.getInstance().init(config);
+
+        dataKeeper=new DataKeeper(this,"config");
     }
     public static ThisApplication getInstance() {
         return instance;
     }
+
 }
