@@ -31,7 +31,6 @@
     "body-parser": "^1.17.1",
     "clean-webpack-plugin": "^0.1.16",
     "copy-webpack-plugin": "^4.0.1",
-    "cors": "^2.8.1",
     "css-loader": "^0.26.0",
     "csslint": "^1.0.5",
     "csslint-loader": "^1.0.0",
