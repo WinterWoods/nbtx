@@ -288,8 +288,12 @@ public class SignalrService extends Service {
                     {
                         isFirst=true;
                         //之后需要缓存的变量在这里缓存
-                        UserInfo=liteOrm.queryById(1,UserInfo.class);
-                        headPhotoModel=liteOrm.queryById(1,FileAuthServiceModel.class);
+                        List<UserInfo> users= liteOrm.query(new QueryBuilder<>(UserInfo.class));
+                        if(users.size()!=0){
+                            UserInfo=users.get(0);
+                        }
+
+                        headPhotoModel=liteOrm.query(FileAuthServiceModel.class).get(0);
                         //还需要加载什么
 
                         signInCallback.initMain();
@@ -380,13 +384,25 @@ public class SignalrService extends Service {
                                                 Log.i(TAG, "返回值:" + userInfo.getHubId() + "端口:" + fileAuthServiceModel.getServicePort());
                                                 headPhotoModel = fileAuthServiceModel;
                                                 UserInfo = userInfo;
-                                                liteOrm.update(userInfo);
-                                                liteOrm.update(headPhotoModel);
+                                                UserInfo user= liteOrm.queryById(userInfo.getKey(),UserInfo.class);
+                                                if(user!=null){
+                                                    liteOrm.update(userInfo);
+                                                }
+                                                else{
+                                                    liteOrm.save(userInfo);
+                                                }
+                                                FileAuthServiceModel fileAuth=liteOrm.queryById(1,FileAuthServiceModel.class);
+                                                if(fileAuth!=null){
+                                                    liteOrm.update(headPhotoModel);
+                                                }
+                                                else{
+                                                    liteOrm.save(headPhotoModel);
+                                                }
                                                 //系统是否初始化
                                                 if(!finalConfig.isInit()){
                                                     //进行系统初始化
                                                     //拉去最近联系人列表
-                                                    msgManagerInvoke(OftenList[].class,"myOftenList", new SignalrService.sendCallback<OftenList[]>() {
+                                                    msgManagerInvoke(OftenList[].class,"myOftenList", new sendCallback<OftenList[]>() {
                                                         @Override
                                                         public void successed(OftenList[] obj) {
                                                             for(OftenList often:obj){
