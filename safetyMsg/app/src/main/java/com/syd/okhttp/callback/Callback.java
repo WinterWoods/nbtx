@@ -1,7 +1,6 @@
 package com.syd.okhttp.callback;
 
 import com.alibaba.fastjson.JSON;
-import com.syd.safetymsg.Models.HttpsApi.LoginAuthUserOKModel;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;

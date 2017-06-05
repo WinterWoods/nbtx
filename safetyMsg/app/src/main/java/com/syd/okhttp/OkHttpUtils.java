@@ -1,7 +1,6 @@
 package com.syd.okhttp;
 
 import com.alibaba.fastjson.JSON;
-import com.google.gson.Gson;
 import com.syd.okhttp.builder.GetBuilder;
 import com.syd.okhttp.builder.HeadBuilder;
 import com.syd.okhttp.builder.OtherRequestBuilder;

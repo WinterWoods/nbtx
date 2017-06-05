@@ -62,9 +62,9 @@ namespace MessageManager
                 //初始化变量
                 lock (LockObject)
                 {
-                    allUser = db.IUserView.ToList();
-                    allUnit = db.IOrgView.ToList();
-                    allUserInfo = db.UserInfo.ToList();
+                    allUser = db.IUserView.AsQuery().ToList();
+                    allUnit = db.IOrgView.AsQuery().ToList();
+                    allUserInfo = db.UserInfo.AsQuery().ToList();
                 }
                 
             }

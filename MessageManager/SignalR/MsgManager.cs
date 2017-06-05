@@ -39,7 +39,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var tmp = db.UserInfo.Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).ToEntity();
+                    var tmp = db.UserInfo.AsQuery().Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).FirstOrDefault();
                     if (tmp != null)
                     {
                         if (tmp.HubId == Context.ConnectionId)
@@ -69,7 +69,7 @@ namespace MessageManager.SignalR
                     UserInfo my = Context.User();
                     model.UserKey = my.Key;
 
-                    var often = db.OftenList.Where(w => w.UserKey == model.UserKey && w.FriendKey == model.FriendKey).ToEntity();
+                    var often = db.OftenList.AsQuery().Where(w => w.UserKey == model.UserKey && w.FriendKey == model.FriendKey).FirstOrDefault();
                     if (often != null)
                     {
                         often.LastTime = DateTime.Now;
@@ -110,7 +110,7 @@ namespace MessageManager.SignalR
                 using (DB db = new DB())
                 {
                     UserInfo my = Context.User();
-                    return db.OftenList.Where(w => w.UserKey == my.Key).OrderDesc(o => o.EditTime).ToList();
+                    return db.OftenList.AsQuery().Where(w => w.UserKey == my.Key).OrderByDesc(o => o.EditTime).ToList();
                 }
             });
         }
@@ -168,7 +168,7 @@ namespace MessageManager.SignalR
                     model.ReadPersonCount = 0;
                     model = db.MsgInfo.Add(model);
                     //更新发送人的消息记录
-                    var often = db.OftenList.Where(w => w.UserKey == myUser.Key && w.FriendKey == model.ReceivedKey).ToEntity();
+                    var often = db.OftenList.AsQuery().Where(w => w.UserKey == myUser.Key && w.FriendKey == model.ReceivedKey).FirstOrDefault();
                     often.LastMsgContext = model.Context;
                     often.LastTime = DateTime.Now;
                     db.OftenList.Edit(often);
@@ -280,7 +280,7 @@ namespace MessageManager.SignalR
         private void SendClientMessageType2(DB db, MsgModel msg)
         {
             Dictionary<string, MsgModel> msgList = new Dictionary<string, MsgModel>();
-            var groupUserList = db.GroupUser.Where(w => w.GroupKey == msg.ReceivedKey && w.IsExit == false).ToList();
+            var groupUserList = db.GroupUser.AsQuery().Where(w => w.GroupKey == msg.ReceivedKey && w.IsExit == false).ToList();
             var myUser = Context.User();
             if (myUser.HubId == Context.ConnectionId && !string.IsNullOrEmpty(myUser.PhoneHubId))
             {
@@ -403,7 +403,7 @@ namespace MessageManager.SignalR
                     }
                     else
                     {
-                        if (db.MsgGroupRead.Where(w => w.UserKey == myUser.Key && w.MsgKey == msg.Key).Count() == 0)
+                        if (db.MsgGroupRead.AsQuery().Where(w => w.UserKey == myUser.Key && w.MsgKey == msg.Key).Count() == 0)
                         {
                             //群聊,如果是群聊,每次阅读一次就在库中添加一条,下次拉去记录,进行判断是否已经读取.
                             MsgGroupRead msgRead = new MsgGroupRead();
@@ -449,7 +449,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var result = db.MsgGroupRead.Where(w => w.MsgKey == model.Key).ToList();
+                    var result = db.MsgGroupRead.AsQuery().Where(w => w.MsgKey == model.Key).ToList();
                     return result;
                 }
             });
@@ -464,7 +464,7 @@ namespace MessageManager.SignalR
                 var myUser = Context.User();
                 using (DB db1 = new DB())
                 {
-                    var noSendMsg = db1.MsgNoSendLog.Where(w => w.SendKey == myUser.Key&&w.Type==model.Type).OrderBy(o=>o.EditTime).ToList();
+                    var noSendMsg = db1.MsgNoSendLog.AsQuery().Where(w => w.SendKey == myUser.Key&&w.Type==model.Type).OrderBy(o=>o.EditTime).ToList();
                     foreach (var _msg in noSendMsg)
                     {
                         var msgInfo = db1.MsgInfo.Find(_msg.MsgKey);
@@ -511,7 +511,7 @@ namespace MessageManager.SignalR
                     if (string.IsNullOrEmpty(myUser.PhoneHubId)) return;
                     using (DB db = new DB())
                     {
-                        List<MsgPhoneReadSend> list = db.MsgPhoneReadSend.Where(w => w.SendKey == myUser.Key).OrderBy(o => o.EditTime).ToList();
+                        List<MsgPhoneReadSend> list = db.MsgPhoneReadSend.AsQuery().Where(w => w.SendKey == myUser.Key).OrderBy(o => o.EditTime).ToList();
                         foreach(var tmp in list)
                         {
                             var msg = db.MsgInfo.Find(tmp.MsgKey);
@@ -537,7 +537,7 @@ namespace MessageManager.SignalR
                     var file = db.UpFileInfo.Find(model.FileKey);
                     msg.FileUpOver = true;
                     //更新发送人的消息记录
-                    var often = db.OftenList.Where(w => w.UserKey == myUser.Key && w.FriendKey == msg.ReceivedKey).ToEntity();
+                    var often = db.OftenList.AsQuery().Where(w => w.UserKey == myUser.Key && w.FriendKey == msg.ReceivedKey).FirstOrDefault();
 
 
                     if (msg.MsgType == "2")
@@ -697,7 +697,7 @@ namespace MessageManager.SignalR
                         //如果是群聊,需要找到群成员,进行撤销消息
 
                         var group = db.GroupInfo.Find(msg.ReceivedKey);
-                        var userList = db.GroupUser.Where(w => w.GroupKey == group.Key && w.IsExit == false).ToList();
+                        var userList = db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.IsExit == false).ToList();
                         userList.ForEach(f => {
                             var receiveUser = db.UserInfo.Find(f.UserKey);
                             if (receiveUser != null)
@@ -798,7 +798,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var file = db.UpFileInfo.Where(w => w.MD5 == model.Md5).ToEntity();
+                    var file = db.UpFileInfo.AsQuery().Where(w => w.MD5 == model.Md5).FirstOrDefault();
                     if (file != null)
                     {
                         //创建一个新的文件
@@ -852,7 +852,7 @@ namespace MessageManager.SignalR
                         //如果是群聊，需要找到群聊的配置，查看是否有历史消息查看
                         var groupInfo = db.GroupInfo.Find(model.SendKey);
 
-                        var user = db.GroupUser.Where(w => w.GroupKey == groupInfo.Key && w.UserKey == myUser.Key).ToEntity();
+                        var user = db.GroupUser.AsQuery().Where(w => w.GroupKey == groupInfo.Key && w.UserKey == myUser.Key).FirstOrDefault();
                         if (user == null && user.IsExit)
                         {
                             throw new Exception("您不再群聊,或者已经退出群聊.无法查看群聊天记录");
@@ -868,7 +868,7 @@ namespace MessageManager.SignalR
                         }
 
                     }
-                    query = query.OrderDesc(o => o.SendTime);
+                    query = query.OrderByDesc(o => o.SendTime);
                     query = query.Take(model.PageSize);
                     var aaa = query.ToList().OrderBy(o => o.SendTime).ToList();
                     MessageResultModel<MsgInfo> result = new MessageResultModel<MsgInfo>();
@@ -894,7 +894,7 @@ namespace MessageManager.SignalR
                     {
                         query = query.Where(w => w.ReceivedKey == model.SendKey && w.MsgType == "3");
                     }
-                    query = query.OrderDesc(o => o.SendTime);
+                    query = query.OrderByDesc(o => o.SendTime);
                     var msgList = query.ToList();
                     List<FileModel> result = new List<FileModel>();
                     foreach (var msg in msgList)

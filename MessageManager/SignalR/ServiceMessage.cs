@@ -24,7 +24,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    return db.GroupUser.Where(w => w.GroupKey == groupKey).Take(4).ToList().Select(s => s.UserKey).ToList();
+                    return db.GroupUser.AsQuery().Where(w => w.GroupKey == groupKey).Take(4).ToList().Select(s => s.UserKey).ToList();
                 }
             });
         }
@@ -47,7 +47,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var user = db.UserInfo.Where(w => w.HubId == hubId||w.PhoneHubId==hubId).ToEntity();
+                    var user = db.UserInfo.AsQuery().Where(w => w.HubId == hubId||w.PhoneHubId==hubId).FirstOrDefault();
                     if (user == null)
                         return false;
                     else return true;

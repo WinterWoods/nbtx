@@ -26,7 +26,7 @@ namespace LoadManagement.Api
             using (DB db = new DB())
             {
                 DateTime now7 = DateTime.Now.AddDays(-7);
-                var userDevice = db.UserDeviceList.Where(w => w.UserToken == model.Token && w.UserDevice == model.Device&&w.LastLoginTime> now7).ToEntity();
+                var userDevice = db.UserDeviceList.AsQuery().Where(w => w.UserToken == model.Token && w.UserDevice == model.Device&&w.LastLoginTime> now7).FirstOrDefault();
                 if (userDevice == null)
                     return result;
                 var user = db.UserInfo.Find(userDevice.User_Key);
@@ -45,17 +45,17 @@ namespace LoadManagement.Api
             using (DB db = new DB())
             {
 
-                var tmpList = db.UserInfo.ToList();
-                var user = db.UserInfo.Where(w => w.UserNumber == model.LoginName).ToEntity();
+                var tmpList = db.UserInfo.AsQuery().ToList();
+                var user = db.UserInfo.AsQuery().Where(w => w.UserNumber == model.LoginName).FirstOrDefault();
                 if (user == null)
                 {
-                    var iUser = db.IUserView.Where(w => w.No == model.LoginName).ToEntity();
+                    var iUser = db.IUserView.AsQuery().Where(w => w.No == model.LoginName).FirstOrDefault();
                     if (iUser == null)
                         throw new Exception("没有该用户!");
                     else
                     {
                         //初始一个密码
-                        user = db.UserInfo.Where(w => w.IDCard == iUser.IDCard).ToEntity();
+                        user = db.UserInfo.AsQuery().Where(w => w.IDCard == iUser.IDCard).FirstOrDefault();
                         if (user != null)
                         {
                             user.UserNumber = iUser.No;
@@ -87,12 +87,12 @@ namespace LoadManagement.Api
             using (DB db = new DB())
             {
                 LoginAuthOKUserModel result = new LoginAuthOKUserModel();
-                var _iUser = db.IUserView.Where(w => w.IDCard == user.IDCard).ToEntity();
+                var _iUser = db.IUserView.AsQuery().Where(w => w.IDCard == user.IDCard).FirstOrDefault();
                 if (_iUser == null)
                 {
                     throw new Exception("您的用户已经不存在.");
                 }
-                var iOrg = db.IOrgView.Where(w => w.Code == _iUser.OrgCode).ToEntity();
+                var iOrg = db.IOrgView.AsQuery().Where(w => w.Code == _iUser.OrgCode).FirstOrDefault();
                 if (iOrg == null)
                 {
                     throw new Exception("您登录的用户没有单位");
@@ -117,7 +117,7 @@ namespace LoadManagement.Api
                 context.Clients.Client(ser.ConnHubId).authUserModel(authModel);
 
 
-                var oldUserDevice= db.UserDeviceList.Where(w => w.User_Key == user.Key && w.UserDevice == deviceId).ToEntity();
+                var oldUserDevice= db.UserDeviceList.AsQuery().Where(w => w.User_Key == user.Key && w.UserDevice == deviceId).FirstOrDefault();
                 if (oldUserDevice != null)
                 {
                     oldUserDevice.UserToken = authModel.GuidAuth;

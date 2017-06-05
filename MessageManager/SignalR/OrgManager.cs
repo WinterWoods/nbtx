@@ -105,7 +105,7 @@ namespace MessageManager.SignalR
                 var myUser = Context.User();
                 using (DB db = new DB())
                 {
-                    var users = db.UserInfo.Where(w => w.Search.Contains(model.value.ToUpper())).Take(6).ToList();
+                    var users = db.UserInfo.AsQuery().Where(w => w.Search.Contains(model.value.ToUpper())).Take(6).ToList();
                     foreach (var user in users)
                     {
                         //如果是登录人就跳过去
@@ -136,7 +136,7 @@ namespace MessageManager.SignalR
                 using (DB db = new DB())
                 {
                     UserInfo myUser = this.Context.User();
-                    var friendInfos = db.FriendsInfo.Where(w => w.UserKey == myUser.Key).ToList();
+                    var friendInfos = db.FriendsInfo.AsQuery().Where(w => w.UserKey == myUser.Key).ToList();
                     for (int i = 0; i < friendInfos.Count; i++)
                     {
                         OrgUserList info = new OrgUserList();
@@ -158,8 +158,8 @@ namespace MessageManager.SignalR
                 using (DB db = new DB())
                 {
                     UserInfo myUser = this.Context.User();
-                    var friendInfos = db.GroupUser.Where(w => w.UserKey == myUser.Key && w.IsExit == false).ToList().Select(s => s.GroupKey).ToList();
-                    var groupInfo = db.GroupInfo.Where(w => friendInfos.Contains(w.Key)).ToList();
+                    var friendInfos = db.GroupUser.AsQuery().Where(w => w.UserKey == myUser.Key && w.IsExit == false).ToList().Select(s => s.GroupKey).ToList();
+                    var groupInfo = db.GroupInfo.AsQuery().Where(w => friendInfos.Contains(w.Key)).ToList();
                     for (int i = 0; i < groupInfo.Count; i++)
                     {
                         OrgUserList info = new OrgUserList();
@@ -186,7 +186,7 @@ namespace MessageManager.SignalR
                 using (DB db = new DB())
                 {
                     UserInfo myUser = this.Context.User();
-                    var _user = db.UserInfo.Where(w => w.Key == model.UserKey).ToEntity();
+                    var _user = db.UserInfo.AsQuery().Where(w => w.Key == model.UserKey).FirstOrDefault();
                     var __user = Comm.AllUser.Find(w => w.IDCard == _user.IDCard);
                     if (model.UserKey == myUser.Key)
                     {
@@ -194,7 +194,7 @@ namespace MessageManager.SignalR
                     }
                     else
                     {//判断是否是好友
-                        if (db.FriendsInfo.Where(w => w.UserKey == myUser.Key && w.FiendKey == model.UserKey).Count() > 0)
+                        if (db.FriendsInfo.AsQuery().Where(w => w.UserKey == myUser.Key && w.FiendKey == model.UserKey).Count() > 0)
                         {
                             info.IsFriend = "1";  //好友
                         }
@@ -303,15 +303,15 @@ namespace MessageManager.SignalR
                         resultName = true;
                     }
                     List<string> list = model.KeyList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                    var userList = db.UserInfo.Where(w => list.Contains(w.Key)).ToList();
+                    var userList = db.UserInfo.AsQuery().Where(w => list.Contains(w.Key)).ToList();
                     for (int i = 0; i < userList.Count; i++)
                     {
                         if (!string.IsNullOrEmpty(userList[i].Key))
                         {
                             //如果被干掉过，去更新一下他的最近消息列表
-                            db.OftenList.Edit(w => w.FriendKey == info.Key && w.UserKey == userList[i].Key, () => new OftenList { IsRemove = "0" });
+                            db.OftenList.Edit(e=> new OftenList { IsRemove = "0" }, w => w.FriendKey == info.Key && w.UserKey == userList[i].Key);
                             //找到所有的群用户，进行更新
-                            var addUser = db.GroupUser.Where(w => w.UserKey == userList[i].Key && w.GroupKey == info.Key).ToEntity();
+                            var addUser = db.GroupUser.AsQuery().Where(w => w.UserKey == userList[i].Key && w.GroupKey == info.Key).FirstOrDefault();
                             if (addUser != null)
                             {
                                 addUser.IsExit = false;
@@ -342,7 +342,7 @@ namespace MessageManager.SignalR
                         }
                     }
                     info.GroupName = name;
-                    info.NowCount = (int)db.GroupUser.Where(w => w.GroupKey == info.Key && w.IsExit == false).Count();
+                    info.NowCount = (int)db.GroupUser.AsQuery().Where(w => w.GroupKey == info.Key && w.IsExit == false).Count();
                     info = db.GroupInfo.Edit(info);
                     db.Save();
                     this.UpGroupInfo(info);
@@ -357,7 +357,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    var upGroupInfo = db.GroupUser.Where(w => w.GroupKey == info.Key && w.IsExit == false).ToList();
+                    var upGroupInfo = db.GroupUser.AsQuery().Where(w => w.GroupKey == info.Key && w.IsExit == false).ToList();
                     upGroupInfo.ForEach(f =>
                     {
                         var user = db.UserInfo.Find(f.UserKey);
@@ -398,7 +398,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    return db.GroupUser.Where(w => w.GroupKey == model.Key && w.IsExit == false).ToList();
+                    return db.GroupUser.AsQuery().Where(w => w.GroupKey == model.Key && w.IsExit == false).ToList();
                 }
             });
         }
@@ -408,7 +408,7 @@ namespace MessageManager.SignalR
             {
                 using (DB db = new DB())
                 {
-                    return db.GroupUser.Where(w => w.GroupKey == model.Key).ToList();
+                    return db.GroupUser.AsQuery().Where(w => w.GroupKey == model.Key).ToList();
                 }
             });
         }
@@ -435,11 +435,11 @@ namespace MessageManager.SignalR
                         }
                     }
                     //必须是群成员才可以修改
-                    var groupUser = db.GroupUser.Where(w => w.GroupKey == group.Key && w.UserKey == myUser.Key && w.IsExit == false).Count();
+                    var groupUser = db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.UserKey == myUser.Key && w.IsExit == false).Count();
                     if (groupUser > 0)
                     {
                         //更新最近消息列表中的名字
-                        db.OftenList.Edit(w => w.FriendKey == model.GroupKey, () => new OftenList { FriendName = model.Name });
+                        db.OftenList.Edit(e => new OftenList { FriendName = model.Name }, w => w.FriendKey == model.GroupKey);
 
 
                         group.GroupName = model.Name;
@@ -539,7 +539,7 @@ namespace MessageManager.SignalR
                     {
                         return group;
                     }
-                    var often = db.OftenList.Where(w => w.FriendKey == group.Key && w.UserKey == model.UserKey).ToEntity();
+                    var often = db.OftenList.AsQuery().Where(w => w.FriendKey == group.Key && w.UserKey == model.UserKey).FirstOrDefault();
                     if (often != null)
                     {
                         often.IsRemove = "1";
@@ -561,13 +561,13 @@ namespace MessageManager.SignalR
                             context.Clients.Client(user.PhoneHubId).DeleteGroupSend(group);
                         }
                     }
-                    var delUser = db.GroupUser.Where(w => w.GroupKey == group.Key && w.UserKey == model.UserKey).ToEntity();
+                    var delUser = db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.UserKey == model.UserKey).FirstOrDefault();
                     if (delUser != null)
                     {
                         delUser.IsExit = true;
                         db.GroupUser.Edit(delUser);
                     }
-                    group.NowCount = (int)db.GroupUser.Where(w => w.GroupKey == group.Key && w.IsExit == false).Count();
+                    group.NowCount = (int)db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.IsExit == false).Count();
                     db.GroupInfo.Edit(group);
                     db.Save();
                     this.UpGroupInfo(group);
@@ -587,7 +587,7 @@ namespace MessageManager.SignalR
                     //最近消息记录中干掉
                     db.OftenList.Remove(w => w.FriendKey == group.Key && w.UserKey == myUser.Key);
                     //群成员中干掉
-                    var my = db.GroupUser.Where(w => w.UserKey == myUser.Key).ToEntity();
+                    var my = db.GroupUser.AsQuery().Where(w => w.UserKey == myUser.Key).FirstOrDefault();
                     my.IsExit = true;
                     db.GroupUser.Edit(my);
                     //db.GroupUser.Remove(w => w.UserKey == myUser.Key);
@@ -595,14 +595,14 @@ namespace MessageManager.SignalR
                     if (group.GroupMainKey == myUser.Key)
                     {
                         //如果是群主退出，则需要找一个新人员当做群组
-                        var oneUser = db.GroupUser.Where(w => w.GroupKey == group.Key && w.IsExit == false).Take(1).ToEntity();
+                        var oneUser = db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.IsExit == false).Take(1).FirstOrDefault();
                         if (oneUser != null)
                         {
                             group.GroupMainKey = oneUser.UserKey;
                             db.GroupInfo.Edit(group);
                         }
                     }
-                    group.NowCount = (int)db.GroupUser.Where(w => w.GroupKey == group.Key && w.IsExit == false).Count();
+                    group.NowCount = (int)db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.IsExit == false).Count();
                     db.GroupInfo.Edit(group);
 
 
@@ -628,7 +628,7 @@ namespace MessageManager.SignalR
                         return group;
                     }
                     //准备干掉群成员
-                    var userList = db.GroupUser.Where(r => r.GroupKey == group.Key).ToList();
+                    var userList = db.GroupUser.AsQuery().Where(r => r.GroupKey == group.Key).ToList();
                     //干掉群所有的最近聊天记录
                     //
                     userList.ForEach(f => {
@@ -648,7 +648,7 @@ namespace MessageManager.SignalR
                         }
                         db.GroupUser.Remove(f);
                     });
-                    db.OftenList.Edit(w => w.FriendKey == group.Key, () => new OftenList { IsRemove = "2" });
+                    db.OftenList.Edit(e => new OftenList { IsRemove = "2" }, w => w.FriendKey == group.Key);
                     db.Save();
                     return group;
                 }
@@ -670,7 +670,7 @@ namespace MessageManager.SignalR
                             return;
                         }
                     }
-                    if (db.GroupUser.Where(w => w.GroupKey == group.Key && w.UserKey == myUser.Key).Count() == 0)
+                    if (db.GroupUser.AsQuery().Where(w => w.GroupKey == group.Key && w.UserKey == myUser.Key).Count() == 0)
                         return;
 
                     group.GroupBrief = model.Brief;

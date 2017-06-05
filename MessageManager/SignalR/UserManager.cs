@@ -99,7 +99,7 @@ namespace MessageManager.SignalR
                 var sessionUser = Context.User();
                 using (DB db = new DB())
                 {
-                    result = db.UserConfig.Where(w => w.User_Key == sessionUser.Key).ToEntity();
+                    result = db.UserConfig.AsQuery().Where(w => w.User_Key == sessionUser.Key).FirstOrDefault();
                     if (result == null)
                     {
                         result = new UserConfig();
@@ -123,7 +123,7 @@ namespace MessageManager.SignalR
                 var sessionUser = Context.User();
                 using (DB db = new DB())
                 {
-                    result = db.UserConfig.Where(w => w.User_Key == sessionUser.Key).ToEntity();
+                    result = db.UserConfig.AsQuery().Where(w => w.User_Key == sessionUser.Key).FirstOrDefault();
                     result.ShowWin = model.ShowWin;
                     result.CopySc = model.CopySc;
                     result.AutoRun = model.AutoRun;

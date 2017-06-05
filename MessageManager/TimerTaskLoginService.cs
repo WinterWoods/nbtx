@@ -50,14 +50,14 @@ namespace MessageManager
         {
             using (DB db = new DB())
             {
-                var model = db.UserInfo.Where(w => w.HubId == Context.ConnectionId).ToEntity();
+                var model = db.UserInfo.AsQuery().Where(w => w.HubId == Context.ConnectionId).FirstOrDefault();
                 if (model != null)
                 {
                     model.HubId = "";
                     db.UserInfo.Edit(model);
                     db.Save();
                 }
-                var model1 = db.UserInfo.Where(w => w.PhoneHubId == Context.ConnectionId).ToEntity();
+                var model1 = db.UserInfo.AsQuery().Where(w => w.PhoneHubId == Context.ConnectionId).FirstOrDefault();
                 if (model1 != null)
                 {
                     model1.PhoneHubId = "";
@@ -75,7 +75,7 @@ namespace MessageManager
         {
             using (DB db = new DB())
             {
-                return db.UserInfo.Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).ToEntity();
+                return db.UserInfo.AsQuery().Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).FirstOrDefault();
             }
         }
         /// <summary>
@@ -87,7 +87,7 @@ namespace MessageManager
         {
             using (DB db = new DB())
             {
-                var user = db.UserInfo.Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).ToEntity();
+                var user = db.UserInfo.AsQuery().Where(w => w.HubId == Context.ConnectionId || w.PhoneHubId == Context.ConnectionId).FirstOrDefault();
                 if (user == null)
                 {
                     return false;
