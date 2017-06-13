@@ -109,7 +109,6 @@ try {
                 "groupList",
                 "removeFriend",
                 "delteGroupUser"
-
             ]
         },
         {
